@@ -1,23 +1,21 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/auth';
+import api from './api';
 
 // Register user
 export const register = async (userData) => {
-  const response = await axios.post(`${API_URL}/register`, userData);
+  const response = await api.post('/auth/register', userData);
   if (response.data.token) {
     localStorage.setItem('user', JSON.stringify(response.data));
   }
-  return response.data;
+  return { user: response.data }; // UPDATED
 };
 
-// Login user
+// Login user - UPDATED
 export const login = async (userData) => {
-  const response = await axios.post(`${API_URL}/login`, userData);
+  const response = await api.post('/auth/login', userData);
   if (response.data.token) {
     localStorage.setItem('user', JSON.stringify(response.data));
   }
-  return response.data;
+  return { user: response.data }; // UPDATED
 };
 
 // Logout user
@@ -32,24 +30,12 @@ export const getCurrentUser = () => {
 
 // Get user profile
 export const getProfile = async () => {
-  const user = getCurrentUser();
-  const config = {
-    headers: {
-      Authorization: `Bearer ${user.token}`
-    }
-  };
-  const response = await axios.get(`${API_URL}/profile`, config);
+  const response = await api.get('/auth/profile');
   return response.data;
 };
 
 // Get all users (Admin only)
 export const getAllUsers = async () => {
-  const user = getCurrentUser();
-  const config = {
-    headers: {
-      Authorization: `Bearer ${user.token}`
-    }
-  };
-  const response = await axios.get(`${API_URL}/users`, config);
+  const response = await api.get('/auth/users');
   return response.data;
 };

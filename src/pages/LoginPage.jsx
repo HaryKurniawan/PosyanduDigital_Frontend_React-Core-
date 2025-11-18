@@ -26,9 +26,14 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      await login(formData);
-      // LOGIN → ke /home, nanti di home akan cek apakah sudah isi data atau belum
-      navigate('/home');
+      const response = await login(formData);
+      
+      // CEK ROLE - Redirect berdasarkan role
+      if (response.user && response.user.role === 'ADMIN') {
+        navigate('/dashboard-admin');
+      } else {
+        navigate('/home');
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');
     } finally {
