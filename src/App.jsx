@@ -10,17 +10,22 @@ import NotificationsPage from './pages/NotificationsPage';
 import FamilyDataFormPage from './pages/FamilyDataFormPage';
 import DataKeluargaPage from './pages/DataKeluargaPage';
 import DataAnakPage from './pages/DataAnakPage';
-import DashboardAdminPage from './pages/admin/DashboardAdminPage'; // NEW
-import DetailDataAnakPage from './pages/admin/DetailDataAnakPage'; // NEW
+import RiwayatPemeriksaanPage from './pages/RiwayatPemeriksaanPage'; // 🆕 NEW
+import DashboardAdminPage from './pages/admin/DashboardAdminPage';
+import DetailDataAnakPage from './pages/admin/DetailDataAnakPage';
+import ScheduleManagementPage from './pages/admin/ScheduleManagementPage'; // 🆕 NEW
+import InputPemeriksaanPage from './pages/admin/InputPemeriksaanPage'; // 🆕 NEW
 import { getCurrentUser } from './services/authService';
+import DetailJadwalAdmin from './pages/admin/DetailJadwalAdmin';
 
+// Di dalam <Routes>
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const user = getCurrentUser();
   return user && user.token ? children : <Navigate to="/login" />;
 };
 
-// Admin Route Component - NEW
+// Admin Route Component
 const AdminRoute = ({ children }) => {
   const user = getCurrentUser();
   
@@ -41,7 +46,7 @@ const PublicRoute = ({ children }) => {
   
   if (user && user.token) {
     // Redirect based on role
-    if (user.role === 'admin') {
+    if (user.role === 'ADMIN') { // 🔧 FIXED: Harus uppercase ADMIN
       return <Navigate to="/dashboard-admin" />;
     }
     return <Navigate to="/home" />;
@@ -72,7 +77,9 @@ function App() {
           } 
         />
 
-        {/* Admin Routes - NEW */}
+        {/* ============================================ */}
+        {/* Admin Routes */}
+        {/* ============================================ */}
         <Route 
           path="/dashboard-admin" 
           element={
@@ -89,8 +96,30 @@ function App() {
             </AdminRoute>
           } 
         />
+<Route path="/admin/jadwal/:scheduleId" element={<DetailJadwalAdmin />} />
 
+        {/* 🆕 NEW: Kelola Jadwal Posyandu */}
+        <Route 
+          path="/admin/kelola-jadwal" 
+          element={
+            <AdminRoute>
+              <ScheduleManagementPage />
+            </AdminRoute>
+          } 
+        />
+        {/* 🆕 NEW: Input Pemeriksaan Anak */}
+        <Route 
+          path="/admin/input-pemeriksaan/:scheduleId" 
+          element={
+            <AdminRoute>
+              <InputPemeriksaanPage />
+            </AdminRoute>
+          } 
+        />
+
+        {/* ============================================ */}
         {/* User Protected Routes */}
+        {/* ============================================ */}
         <Route 
           path="/home" 
           element={
@@ -155,11 +184,20 @@ function App() {
             </ProtectedRoute>
           } 
         />
+        {/* 🆕 NEW: Riwayat Pemeriksaan */}
+        <Route 
+          path="/riwayat-pemeriksaan" 
+          element={
+            <ProtectedRoute>
+              <RiwayatPemeriksaanPage />
+            </ProtectedRoute>
+          } 
+        />
 
-        {/* Default Route */}
+        {/* ============================================ */}
+        {/* Default & 404 Routes */}
+        {/* ============================================ */}
         <Route path="/" element={<Navigate to="/login" />} />
-        
-        {/* 404 Route */}
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
     </Router>

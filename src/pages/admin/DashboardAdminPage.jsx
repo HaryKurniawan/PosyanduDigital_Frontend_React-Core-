@@ -74,7 +74,14 @@ const DashboardAdminPage = () => {
           </div>
         </div>
       </div>
-
+<div 
+  onClick={() => navigate('/admin/kelola-jadwal')}
+  className="bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl p-4 hover:shadow-lg transition cursor-pointer"
+>
+  <div className="text-4xl mb-4">📅</div>
+  <h3 className="text-lg font-bold text-gray-800 mb-2">Kelola Jadwal</h3>
+  <p className="text-sm text-gray-600">Buat & kelola jadwal posyandu</p>
+</div>
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Search Bar */}
