@@ -17,9 +17,13 @@ import ScheduleManagementPage from './pages/admin/ScheduleManagementPage'; // �
 import InputPemeriksaanPage from './pages/admin/InputPemeriksaanPage'; // 🆕 NEW
 import { getCurrentUser } from './services/authService';
 import DetailJadwalAdmin from './pages/admin/DetailJadwalAdmin';
+import DaftarAnakAdminPage from './pages/admin/DaftarAnakAdminPage'; // 🆕 NEW
+import KPSPPage from './pages/KPSPPage';
+import ImunisasiPage from './pages/ImunisasiPage';
 
-// Di dalam <Routes>
-// Protected Route Component
+
+// Tambahkan di dalam <Routes>
+
 const ProtectedRoute = ({ children }) => {
   const user = getCurrentUser();
   return user && user.token ? children : <Navigate to="/login" />;
@@ -96,8 +100,21 @@ function App() {
             </AdminRoute>
           } 
         />
-<Route path="/admin/jadwal/:scheduleId" element={<DetailJadwalAdmin />} />
+      <Route 
+          path="/admin/jadwal/:scheduleId" 
+          element={
+            <DetailJadwalAdmin />
+          } 
+      />
 
+      <Route 
+          path="/admin/daftar-anak" 
+          element={
+            <AdminRoute>
+              <DaftarAnakAdminPage />
+            </AdminRoute>
+          } 
+        />
         {/* 🆕 NEW: Kelola Jadwal Posyandu */}
         <Route 
           path="/admin/kelola-jadwal" 
@@ -152,6 +169,25 @@ function App() {
             </ProtectedRoute>
           } 
         />
+        <Route 
+  path="/kpsp" 
+  element={
+    <ProtectedRoute>
+      <KPSPPage />
+    </ProtectedRoute>
+  } 
+/>
+
+
+
+<Route 
+  path="/imunisasi" 
+  element={
+    <ProtectedRoute>
+      <ImunisasiPage />
+    </ProtectedRoute>
+  } 
+/>
         <Route 
           path="/notifications" 
           element={

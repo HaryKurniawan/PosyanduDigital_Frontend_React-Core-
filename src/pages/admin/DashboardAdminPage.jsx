@@ -2,25 +2,32 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAllChildren } from '../../services/adminService';
 import { logout } from '../../services/authService';
+import { Calendar, Users, FileText, TrendingUp, LogOut, Baby } from 'lucide-react';
 
 const DashboardAdminPage = () => {
   const navigate = useNavigate();
-  const [children, setChildren] = useState([]);
+  const [stats, setStats] = useState({
+    totalChildren: 0,
+    totalSchedules: 0,
+    totalExaminations: 0
+  });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    fetchChildren();
+    fetchStats();
   }, []);
 
-  const fetchChildren = async () => {
+  const fetchStats = async () => {
     try {
       setLoading(true);
-      const data = await getAllChildren();
-      setChildren(data);
+      const childrenData = await getAllChildren();
+      setStats({
+        totalChildren: childrenData.length,
+        totalSchedules: 0, // TODO: Add API call
+        totalExaminations: 0 // TODO: Add API call
+      });
     } catch (err) {
-      setError(err.response?.data?.message || 'Gagal memuat data');
+      console.error('Error fetching stats:', err);
     } finally {
       setLoading(false);
     }
@@ -31,22 +38,39 @@ const DashboardAdminPage = () => {
     navigate('/login');
   };
 
-  const filteredChildren = children.filter(child =>
-    child.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    child.nik.includes(searchTerm)
-  );
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
-  };
+  const menuItems = [
+    {
+      title: 'Kelola Jadwal',
+      description: 'Buat & kelola jadwal posyandu',
+      icon: Calendar,
+      color: 'from-purple-500 to-purple-600',
+      bgColor: 'from-purple-50 to-purple-100',
+      iconColor: 'text-purple-600',
+      path: '/admin/kelola-jadwal'
+    },
+    {
+      title: 'Daftar Anak',
+      description: 'Lihat data semua anak',
+      icon: Users,
+      color: 'from-blue-500 to-blue-600',
+      bgColor: 'from-blue-50 to-blue-100',
+      iconColor: 'text-blue-600',
+      path: '/admin/daftar-anak'
+    },
+    {
+      title: 'Laporan',
+      description: 'Lihat laporan & statistik',
+      icon: TrendingUp,
+      color: 'from-green-500 to-green-600',
+      bgColor: 'from-green-50 to-green-100',
+      iconColor: 'text-green-600',
+      path: '/admin/laporan'
+    }
+  ];
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-600 mx-auto"></div>
           <p className="mt-4 text-gray-600 font-medium">Memuat data...</p>
@@ -56,154 +80,110 @@ const DashboardAdminPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg">
+      <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold">Dashboard Admin</h1>
-              <p className="text-purple-100 mt-1">Kelola Data Anak Posyandu</p>
+              <p className="text-purple-100 mt-1">Sistem Informasi Posyandu</p>
             </div>
             <button
               onClick={handleLogout}
-              className="bg-white text-purple-600 px-6 py-2 rounded-lg font-semibold hover:bg-purple-50 transition"
+              className="flex items-center gap-2 bg-white text-purple-600 px-6 py-2.5 rounded-xl font-semibold hover:bg-purple-50 transition shadow-md"
             >
+              <LogOut className="w-4 h-4" />
               Logout
             </button>
           </div>
         </div>
       </div>
-<div 
-  onClick={() => navigate('/admin/kelola-jadwal')}
-  className="bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl p-4 hover:shadow-lg transition cursor-pointer"
->
-  <div className="text-4xl mb-4">📅</div>
-  <h3 className="text-lg font-bold text-gray-800 mb-2">Kelola Jadwal</h3>
-  <p className="text-sm text-gray-600">Buat & kelola jadwal posyandu</p>
-</div>
+
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Search Bar */}
-        <div className="mb-8">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Cari nama anak atau NIK..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-5 py-4 pl-12 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            />
-            <svg
-              className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-          </div>
-        </div>
-
-        {/* Stats */}
+        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-500">
+          {/* Total Anak */}
+          <div className="bg-white rounded-2xl shadow-md p-6 border-l-4 border-purple-500">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-500 text-sm font-medium">Total Anak</p>
-                <p className="text-3xl font-bold text-gray-800 mt-1">
-                  {children.length}
+                <p className="text-gray-500 text-sm font-medium mb-1">Total Anak</p>
+                <p className="text-4xl font-bold text-gray-800">
+                  {stats.totalChildren}
                 </p>
+                <p className="text-xs text-gray-400 mt-1">Anak terdaftar</p>
               </div>
-              <div className="bg-purple-100 p-3 rounded-full">
-                <svg
-                  className="w-8 h-8 text-purple-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                  />
-                </svg>
+              <div className="bg-purple-100 p-4 rounded-2xl">
+                <Baby className="w-10 h-10 text-purple-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Total Jadwal */}
+          <div className="bg-white rounded-2xl shadow-md p-6 border-l-4 border-blue-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-500 text-sm font-medium mb-1">Total Jadwal</p>
+                <p className="text-4xl font-bold text-gray-800">
+                  {stats.totalSchedules}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">Jadwal aktif</p>
+              </div>
+              <div className="bg-blue-100 p-4 rounded-2xl">
+                <Calendar className="w-10 h-10 text-blue-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Total Pemeriksaan */}
+          <div className="bg-white rounded-2xl shadow-md p-6 border-l-4 border-green-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-500 text-sm font-medium mb-1">Total Pemeriksaan</p>
+                <p className="text-4xl font-bold text-gray-800">
+                  {stats.totalExaminations}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">Data pemeriksaan</p>
+              </div>
+              <div className="bg-green-100 p-4 rounded-2xl">
+                <FileText className="w-10 h-10 text-green-600" />
               </div>
             </div>
           </div>
         </div>
 
-        {/* Error Message */}
-        {error && (
-          <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-6">
-            {error}
-          </div>
-        )}
+        {/* Menu Cards */}
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Menu Utama</h2>
+        </div>
 
-        {/* Children Cards */}
-        {filteredChildren.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-md p-12 text-center">
-            <svg
-              className="w-16 h-16 text-gray-400 mx-auto mb-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-              />
-            </svg>
-            <p className="text-gray-500 text-lg">
-              {searchTerm ? 'Tidak ada data yang sesuai' : 'Belum ada data anak'}
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredChildren.map((child) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {menuItems.map((item, index) => {
+            const Icon = item.icon;
+            return (
               <div
-                key={child.id}
-                onClick={() => navigate(`/detail-data-anak/${child.id}`)}
-                className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1 overflow-hidden"
+                key={index}
+                onClick={() => navigate(item.path)}
+                className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1 overflow-hidden group"
               >
-                <div className="bg-gradient-to-r from-purple-500 to-indigo-500 p-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="bg-white p-3 rounded-full">
-                      <svg
-                        className="w-6 h-6 text-purple-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                        />
-                      </svg>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-white font-bold text-lg truncate">
-                        {child.fullName}
-                      </h3>
-                      <p className="text-purple-100 text-sm">Anak ke-{child.childOrder}</p>
-                    </div>
+                <div className={`bg-gradient-to-br ${item.bgColor} p-6 transition-all group-hover:scale-105`}>
+                  <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-4 shadow-md">
+                    <Icon className={`w-8 h-8 ${item.iconColor}`} />
                   </div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">
+                    {item.title}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {item.description}
+                  </p>
                 </div>
-
-                <div className="p-5 space-y-3">
-                  <div className="flex items-start space-x-3">
+                
+                <div className={`bg-gradient-to-r ${item.color} p-4`}>
+                  <div className="flex items-center justify-between text-white">
+                    <span className="font-semibold text-sm">Buka Menu</span>
                     <svg
-                      className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0"
+                      className="w-5 h-5 transform group-hover:translate-x-1 transition-transform"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -212,93 +192,72 @@ const DashboardAdminPage = () => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
-                        d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"
+                        d="M9 5l7 7-7 7"
                       />
                     </svg>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-gray-500 mb-1">NIK</p>
-                      <p className="text-sm font-semibold text-gray-800 break-all">
-                        {child.nik}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start space-x-3">
-                    <svg
-                      className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                    <div className="flex-1">
-                      <p className="text-xs text-gray-500 mb-1">Tanggal Lahir</p>
-                      <p className="text-sm font-medium text-gray-700">
-                        {formatDate(child.birthDate)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start space-x-3">
-                    <svg
-                      className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                    </svg>
-                    <div className="flex-1">
-                      <p className="text-xs text-gray-500 mb-1">Tempat Lahir</p>
-                      <p className="text-sm font-medium text-gray-700">
-                        {child.birthPlace}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="pt-3 border-t border-gray-100">
-                    <button className="w-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white py-2.5 rounded-lg font-semibold hover:from-purple-600 hover:to-indigo-600 transition flex items-center justify-center space-x-2">
-                      <span>Lihat Detail</span>
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
-                    </button>
                   </div>
                 </div>
               </div>
-            ))}
+            );
+          })}
+        </div>
+
+        {/* Quick Info */}
+        <div className="mt-8 bg-white rounded-2xl shadow-md p-6">
+          <h3 className="text-lg font-bold text-gray-800 mb-4">Informasi Sistem</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-xl">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-xl">📋</span>
+              </div>
+              <div>
+                <p className="font-semibold text-gray-800 text-sm">Kelola Jadwal</p>
+                <p className="text-xs text-gray-600 mt-1">
+                  Buat jadwal posyandu baru dan kelola pendaftaran
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3 p-4 bg-purple-50 rounded-xl">
+              <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-xl">👶</span>
+              </div>
+              <div>
+                <p className="font-semibold text-gray-800 text-sm">Data Anak</p>
+                <p className="text-xs text-gray-600 mt-1">
+                  Lihat dan kelola data lengkap semua anak
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-4 bg-green-50 rounded-xl">
+              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-xl">📊</span>
+              </div>
+              <div>
+                <p className="font-semibold text-gray-800 text-sm">Laporan</p>
+                <p className="text-xs text-gray-600 mt-1">
+                  Lihat statistik dan laporan pemeriksaan
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-4 bg-orange-50 rounded-xl">
+              <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-xl">💉</span>
+              </div>
+              <div>
+                <p className="font-semibold text-gray-800 text-sm">Input Pemeriksaan</p>
+                <p className="text-xs text-gray-600 mt-1">
+                  Input data pemeriksaan dan imunisasi anak
+                </p>
+              </div>
+            </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
 };
 
-export default DashboardAdminPage;
+export default DashboardAdminPage

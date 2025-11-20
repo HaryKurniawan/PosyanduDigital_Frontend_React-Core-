@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import MobileNavbar from '../components/MobileNavbar';
-import { Calendar, Heart, ChevronRight, MapPin, Clock, Users, CheckCircle, XCircle, User } from 'lucide-react';
+import { Calendar, Heart, ChevronRight, MapPin, Clock, Users, CheckCircle, XCircle, User, History } from 'lucide-react';
 import { getUpcomingSchedules, getMyRegistrations, registerForPosyandu, cancelRegistration } from '../services/posyanduService';
 
 const JadwalPage = () => {
@@ -11,6 +11,7 @@ const JadwalPage = () => {
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [myChildren, setMyChildren] = useState([]);
   const [selectedChild, setSelectedChild] = useState('');
+  const [activeTab, setActiveTab] = useState('upcoming'); // upcoming | registered | history
 
   useEffect(() => {
     fetchData();
@@ -100,6 +101,10 @@ const JadwalPage = () => {
     return myRegistrations.some(r => r.scheduleId === scheduleId && r.status !== 'CANCELLED');
   };
 
+  // Filter registrations
+  const activeRegistrations = myRegistrations.filter(r => r.status === 'REGISTERED');
+  const historyRegistrations = myRegistrations.filter(r => r.status === 'ATTENDED' || r.status === 'CANCELLED');
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-orange-50 flex items-center justify-center">
@@ -116,106 +121,256 @@ const JadwalPage = () => {
       <MobileNavbar />
       
       <div className="pt-20 pb-24 px-4">
-        {/* My Registrations */}
-        {myRegistrations.length > 0 && (
-          <div className="bg-white rounded-2xl p-4 shadow-sm mb-4">
-            <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-              <CheckCircle className="w-5 h-5 text-green-600" />
-              Pendaftaran Saya
-            </h3>
-            <div className="space-y-3">
-              {myRegistrations.map((registration) => (
-                <div 
-                  key={registration.id} 
-                  className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <p className="font-semibold text-gray-800">{registration.child.fullName}</p>
-                      <p className="text-xs text-gray-600 mt-1">{registration.schedule.location}</p>
-                      <p className="text-xs text-gray-500">{formatDate(registration.schedule.scheduleDate)}</p>
+        {/* Header */}
+        <div className="mb-4">
+          <h1 className="text-2xl font-bold text-gray-800 mb-1">Jadwal Posyandu</h1>
+          <p className="text-sm text-gray-600">Lihat dan daftar jadwal posyandu</p>
+        </div>
+
+        {/* Tabs */}
+        <div className="bg-white rounded-2xl p-2 shadow-sm mb-4">
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              onClick={() => setActiveTab('upcoming')}
+              className={`py-3 rounded-xl font-semibold text-sm transition ${
+                activeTab === 'upcoming'
+                  ? 'bg-purple-600 text-white shadow-md'
+                  : 'bg-transparent text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <Calendar className="w-4 h-4 inline mb-1" />
+              <div className="text-xs mt-1">Mendatang</div>
+              {upcomingSchedules.length > 0 && (
+                <div className="text-xs mt-0.5 opacity-80">({upcomingSchedules.length})</div>
+              )}
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('registered')}
+              className={`py-3 rounded-xl font-semibold text-sm transition ${
+                activeTab === 'registered'
+                  ? 'bg-purple-600 text-white shadow-md'
+                  : 'bg-transparent text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <CheckCircle className="w-4 h-4 inline mb-1" />
+              <div className="text-xs mt-1">Terdaftar</div>
+              {activeRegistrations.length > 0 && (
+                <div className="text-xs mt-0.5 opacity-80">({activeRegistrations.length})</div>
+              )}
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('history')}
+              className={`py-3 rounded-xl font-semibold text-sm transition ${
+                activeTab === 'history'
+                  ? 'bg-purple-600 text-white shadow-md'
+                  : 'bg-transparent text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <History className="w-4 h-4 inline mb-1" />
+              <div className="text-xs mt-1">Riwayat</div>
+              {historyRegistrations.length > 0 && (
+                <div className="text-xs mt-0.5 opacity-80">({historyRegistrations.length})</div>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Content Based on Active Tab */}
+        <div className="space-y-3">
+          {/* Tab: Upcoming Schedules */}
+          {activeTab === 'upcoming' && (
+            <div>
+              {upcomingSchedules.length === 0 ? (
+                <div className="bg-white rounded-2xl p-8 text-center shadow-sm">
+                  <Calendar className="w-16 h-16 mx-auto mb-3 text-gray-300" />
+                  <p className="text-gray-500">Belum ada jadwal mendatang</p>
+                </div>
+              ) : (
+                upcomingSchedules.map((schedule) => {
+                  const registered = isRegistered(schedule.id);
+                  return (
+                    <div 
+                      key={schedule.id} 
+                      className="bg-white rounded-2xl p-4 shadow-sm hover:shadow-md transition"
+                    >
+                      <div className="flex items-start gap-3 mb-3">
+                        <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center flex-shrink-0">
+                          <Calendar className="w-6 h-6 text-purple-600" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-bold text-gray-800 text-lg">{schedule.location}</p>
+                          <div className="flex items-center gap-1 text-sm text-gray-600 mt-1">
+                            <Clock className="w-4 h-4" />
+                            {formatDate(schedule.scheduleDate)}
+                          </div>
+                          {schedule.description && (
+                            <p className="text-sm text-gray-500 mt-2 bg-gray-50 rounded-lg p-2">
+                              {schedule.description}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-1 text-xs text-gray-500 mt-2">
+                            <Users className="w-3 h-3" />
+                            {schedule._count.registrations} orang terdaftar
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {registered ? (
+                        <div className="flex items-center justify-center gap-2 py-2 bg-green-100 text-green-700 rounded-xl text-sm font-semibold">
+                          <CheckCircle className="w-4 h-4" />
+                          Sudah Terdaftar
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleRegister(schedule)}
+                          className="w-full py-3 bg-purple-600 text-white rounded-xl text-sm font-semibold hover:bg-purple-700 transition"
+                        >
+                          Daftar Sekarang
+                        </button>
+                      )}
                     </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                      registration.status === 'REGISTERED' ? 'bg-blue-100 text-blue-700' :
-                      registration.status === 'ATTENDED' ? 'bg-green-100 text-green-700' :
-                      'bg-gray-100 text-gray-700'
-                    }`}>
-                      {registration.status === 'REGISTERED' ? 'Terdaftar' :
-                       registration.status === 'ATTENDED' ? 'Hadir' : 'Dibatalkan'}
-                    </span>
-                  </div>
-                  {registration.status === 'REGISTERED' && (
+                  );
+                })
+              )}
+            </div>
+          )}
+
+          {/* Tab: My Active Registrations */}
+          {activeTab === 'registered' && (
+            <div>
+              {activeRegistrations.length === 0 ? (
+                <div className="bg-white rounded-2xl p-8 text-center shadow-sm">
+                  <CheckCircle className="w-16 h-16 mx-auto mb-3 text-gray-300" />
+                  <p className="text-gray-500">Belum ada pendaftaran aktif</p>
+                  <button
+                    onClick={() => setActiveTab('upcoming')}
+                    className="mt-4 px-6 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition text-sm font-semibold"
+                  >
+                    Lihat Jadwal
+                  </button>
+                </div>
+              ) : (
+                activeRegistrations.map((registration) => (
+                  <div 
+                    key={registration.id} 
+                    className="bg-white rounded-2xl p-4 shadow-sm"
+                  >
+                    <div className="flex items-start gap-4 mb-3">
+                      <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <User className="w-6 h-6 text-green-600" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <p className="font-bold text-gray-800 text-lg">{registration.child.fullName}</p>
+                            <p className="text-xs text-gray-500">NIK: {registration.child.nik}</p>
+                          </div>
+                          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
+                            Terdaftar
+                          </span>
+                        </div>
+                        
+                        <div className="bg-purple-50 rounded-xl p-3 mt-2">
+                          <div className="flex items-center gap-2 mb-1">
+                            <MapPin className="w-4 h-4 text-purple-600" />
+                            <p className="text-sm font-semibold text-gray-800">{registration.schedule.location}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-purple-600" />
+                            <p className="text-xs text-gray-600">{formatDate(registration.schedule.scheduleDate)}</p>
+                          </div>
+                        </div>
+
+                        {registration.notes && (
+                          <div className="mt-2 bg-blue-50 border border-blue-200 rounded-lg p-2">
+                            <p className="text-xs text-blue-800">
+                              <span className="font-semibold">Catatan:</span> {registration.notes}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
                     <button
                       onClick={() => handleCancelRegistration(registration.id)}
-                      className="mt-2 w-full py-2 bg-red-100 text-red-700 rounded-lg text-sm font-semibold hover:bg-red-200 transition"
+                      className="w-full py-2 bg-red-100 text-red-700 rounded-xl text-sm font-semibold hover:bg-red-200 transition"
                     >
                       Batalkan Pendaftaran
                     </button>
-                  )}
-                </div>
-              ))}
+                  </div>
+                ))
+              )}
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Upcoming Schedules */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm">
-          <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-purple-600" />
-            Jadwal Posyandu Mendatang
-          </h3>
-          <div className="space-y-3">
-            {upcomingSchedules.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <Calendar className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                <p>Belum ada jadwal mendatang</p>
-              </div>
-            ) : (
-              upcomingSchedules.map((schedule) => {
-                const registered = isRegistered(schedule.id);
-                return (
+          {/* Tab: History */}
+          {activeTab === 'history' && (
+            <div>
+              {historyRegistrations.length === 0 ? (
+                <div className="bg-white rounded-2xl p-8 text-center shadow-sm">
+                  <History className="w-16 h-16 mx-auto mb-3 text-gray-300" />
+                  <p className="text-gray-500">Belum ada riwayat pendaftaran</p>
+                </div>
+              ) : (
+                historyRegistrations.map((registration) => (
                   <div 
-                    key={schedule.id} 
-                    className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl hover:shadow-md transition"
+                    key={registration.id} 
+                    className="bg-white rounded-2xl p-4 shadow-sm"
                   >
-                    <div className="flex items-start gap-3 mb-3">
-                      <div className="w-12 h-12 bg-purple-200 rounded-full flex items-center justify-center flex-shrink-0">
-                        <Calendar className="w-6 h-6 text-purple-600" />
+                    <div className="flex items-start gap-4">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        registration.status === 'ATTENDED' 
+                          ? 'bg-gradient-to-br from-green-100 to-emerald-100' 
+                          : 'bg-gradient-to-br from-gray-100 to-gray-200'
+                      }`}>
+                        {registration.status === 'ATTENDED' ? (
+                          <CheckCircle className="w-6 h-6 text-green-600" />
+                        ) : (
+                          <XCircle className="w-6 h-6 text-gray-600" />
+                        )}
                       </div>
                       <div className="flex-1">
-                        <p className="font-semibold text-gray-800">{schedule.location}</p>
-                        <div className="flex items-center gap-1 text-xs text-gray-600 mt-1">
-                          <Clock className="w-3 h-3" />
-                          {formatDate(schedule.scheduleDate)}
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <p className="font-bold text-gray-800 text-lg">{registration.child.fullName}</p>
+                            <p className="text-xs text-gray-500">NIK: {registration.child.nik}</p>
+                          </div>
+                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                            registration.status === 'ATTENDED' 
+                              ? 'bg-green-100 text-green-700' 
+                              : 'bg-gray-100 text-gray-700'
+                          }`}>
+                            {registration.status === 'ATTENDED' ? 'Hadir' : 'Dibatalkan'}
+                          </span>
                         </div>
-                        {schedule.description && (
-                          <p className="text-xs text-gray-500 mt-1">{schedule.description}</p>
+                        
+                        <div className="bg-gray-50 rounded-xl p-3 mt-2">
+                          <div className="flex items-center gap-2 mb-1">
+                            <MapPin className="w-4 h-4 text-gray-600" />
+                            <p className="text-sm font-semibold text-gray-800">{registration.schedule.location}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-gray-600" />
+                            <p className="text-xs text-gray-600">{formatDate(registration.schedule.scheduleDate)}</p>
+                          </div>
+                        </div>
+
+                        {registration.notes && (
+                          <div className="mt-2 bg-blue-50 border border-blue-200 rounded-lg p-2">
+                            <p className="text-xs text-blue-800">
+                              <span className="font-semibold">Catatan:</span> {registration.notes}
+                            </p>
+                          </div>
                         )}
-                        <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
-                          <Users className="w-3 h-3" />
-                          {schedule._count.registrations} terdaftar
-                        </div>
                       </div>
                     </div>
-                    
-                    {registered ? (
-                      <div className="flex items-center justify-center gap-2 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-semibold">
-                        <CheckCircle className="w-4 h-4" />
-                        Sudah Terdaftar
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => handleRegister(schedule)}
-                        className="w-full py-2 bg-purple-600 text-white rounded-lg text-sm font-semibold hover:bg-purple-700 transition"
-                      >
-                        Daftar Sekarang
-                      </button>
-                    )}
                   </div>
-                );
-              })
-            )}
-          </div>
+                ))
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -243,7 +398,7 @@ const JadwalPage = () => {
                     {child.fullName}
                   </option>
                 ))}
-                </select>
+              </select>
             </div>
 
             <div className="flex gap-3">
