@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { ChevronLeft, Search, User, Calendar, Check, AlertCircle, Users } from 'lucide-react';
 import { searchChildByNIK, createExamination, getAllChildren } from '../../services/posyanduService';
 
 const InputPemeriksaanPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { scheduleId } = useParams();
   const [step, setStep] = useState(1); // 1: search/list, 2: verify, 3: input
   const [nik, setNik] = useState('');
@@ -37,10 +38,17 @@ const InputPemeriksaanPage = () => {
     'Campak/MR 2'
   ];
 
-  // Fetch all children on mount
+  // Check if there's a selected child from navigation state
   useEffect(() => {
-    fetchAllChildren();
-  }, []);
+    if (location.state?.selectedChild) {
+      // If child is selected from detail schedule, skip to step 2
+      setChildData(location.state.selectedChild);
+      setStep(2);
+    } else {
+      // Otherwise, fetch all children for selection
+      fetchAllChildren();
+    }
+  }, [location.state]);
 
   const fetchAllChildren = async () => {
     try {
@@ -93,7 +101,7 @@ const InputPemeriksaanPage = () => {
         ...examData
       });
       alert('Data pemeriksaan berhasil disimpan!');
-      navigate('/admin/kelola-jadwal');
+      navigate(`/admin/kelola-jadwal/${scheduleId}`);
     } catch (error) {
       console.error('Error saving examination:', error);
       alert('Gagal menyimpan data pemeriksaan');
@@ -130,13 +138,24 @@ const InputPemeriksaanPage = () => {
     child.nik.includes(searchQuery)
   );
 
+  const handleBack = () => {
+    if (step === 1) {
+      navigate(`/admin/kelola-jadwal/${scheduleId}`);
+    } else if (step === 2 && location.state?.selectedChild) {
+      // If came from detail schedule, go back to detail schedule
+      navigate(`/admin/kelola-jadwal/${scheduleId}`);
+    } else {
+      setStep(step - 1);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 pb-6">
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-6 rounded-b-3xl shadow-lg">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => step === 1 ? navigate('/admin/kelola-jadwal') : setStep(step - 1)}
+            onClick={handleBack}
             className="p-2 hover:bg-white/20 rounded-full transition"
           >
             <ChevronLeft className="w-6 h-6" />
@@ -351,8 +370,8 @@ const InputPemeriksaanPage = () => {
                   <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm font-semibold text-blue-900 mb-1">Data Orang Tua</p>
-                    <p className="text-sm text-blue-800">Ibu: {childData.user.motherData?.fullName || '-'}</p>
-                    <p className="text-sm text-blue-800">Ayah: {childData.user.spouseData?.fullName || '-'}</p>
+                    <p className="text-sm text-blue-800">Ibu: {childData.user?.motherData?.fullName || '-'}</p>
+                    <p className="text-sm text-blue-800">Ayah: {childData.user?.spouseData?.fullName || '-'}</p>
                   </div>
                 </div>
               </div>
@@ -361,13 +380,17 @@ const InputPemeriksaanPage = () => {
             <div className="flex gap-3">
               <button
                 onClick={() => {
-                  setStep(1);
-                  setChildData(null);
-                  setNik('');
+                  if (location.state?.selectedChild) {
+                    navigate(`/admin/kelola-jadwal/${scheduleId}`);
+                  } else {
+                    setStep(1);
+                    setChildData(null);
+                    setNik('');
+                  }
                 }}
                 className="flex-1 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition font-semibold"
               >
-                Cari Ulang
+                {location.state?.selectedChild ? 'Batal' : 'Cari Ulang'}
               </button>
               <button
                 onClick={() => setStep(3)}

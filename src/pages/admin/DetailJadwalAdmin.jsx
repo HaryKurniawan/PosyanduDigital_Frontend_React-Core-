@@ -254,7 +254,9 @@ const DetailJadwalAdmin = () => {
                     {/* Action Button */}
                     {registration.status === 'REGISTERED' && (
                       <button
-                        onClick={() => navigate(`/admin/input-pemeriksaan/${scheduleId}`)}
+                        onClick={() => navigate(`/admin/input-pemeriksaan/${scheduleId}`, {
+                          state: { selectedChild: registration.child }
+                        })}
                         className="mt-3 w-full py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition font-semibold text-sm"
                       >
                         Input Pemeriksaan
@@ -337,7 +339,9 @@ const DetailJadwalAdmin = () => {
 
       {/* Floating Action Button */}
       <button
-        onClick={() => navigate(`/admin/input-pemeriksaan/${scheduleId}`)}
+        onClick={() => navigate(`/admin/input-pemeriksaan/${scheduleId}`, {
+          state: { fromSchedule: true }
+        })}
         className="fixed bottom-6 right-6 w-14 h-14 bg-purple-600 text-white rounded-full shadow-lg hover:bg-purple-700 transition flex items-center justify-center"
       >
         <FileText className="w-6 h-6" />

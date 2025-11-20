@@ -48,13 +48,13 @@ const HomePage = () => {
           </div>
 
           <div 
-  onClick={() => navigate('/riwayat-pemeriksaan')}
-  className="bg-gradient-to-br from-blue-100 to-cyan-100 rounded-2xl p-4 hover:shadow-lg transition cursor-pointer"
->
-  <div className="text-4xl mb-4">📊</div>
-  <h3 className="text-lg font-bold text-gray-800 mb-2">Riwayat</h3>
-  <p className="text-sm text-gray-600">Lihat riwayat pemeriksaan</p>
-</div>
+            onClick={() => navigate('/riwayat-pemeriksaan')}
+            className="bg-gradient-to-br from-blue-100 to-cyan-100 rounded-2xl p-4 hover:shadow-lg transition cursor-pointer"
+          >
+            <div className="text-4xl mb-4">📊</div>
+            <h3 className="text-lg font-bold text-gray-800 mb-2">Riwayat</h3>
+            <p className="text-sm text-gray-600">Lihat riwayat pemeriksaan</p>
+          </div>
 
           <div className="bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl p-4 hover:shadow-lg transition cursor-pointer">
             <div className="text-4xl mb-4">💉</div>
