@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { ChevronLeft, Search, User, Calendar, Check, AlertCircle, Users } from 'lucide-react';
-import { searchChildByNIK, createExamination, getAllChildren } from '../../services/posyanduService';
+import { 
+  searchChildByNIK, 
+  createExamination, 
+  getAllChildren,
+  getAllImmunizationTemplates 
+} from '../../services/posyanduService';
 
 const InputPemeriksaanPage = () => {
   const navigate = useNavigate();
@@ -14,32 +19,24 @@ const InputPemeriksaanPage = () => {
   const [allChildren, setAllChildren] = useState([]);
   const [searchMode, setSearchMode] = useState(false); // toggle between list and search
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Immunization state
+  const [immunizationTemplates, setImmunizationTemplates] = useState([]);
+  const [vaccineOptions, setVaccineOptions] = useState([]);
+  
   const [examData, setExamData] = useState({
     weight: '',
     height: '',
     headCircumference: '',
     armCircumference: '',
-    immunization: '-',
+    immunizationVaccineId: '', // Changed from string to ID
     notes: ''
   });
 
-  const immunizationOptions = [
-    '-',
-    'BCG',
-    'Hepatitis B',
-    'Polio 1',
-    'Polio 2',
-    'Polio 3',
-    'Polio 4',
-    'DPT-HB-Hib 1',
-    'DPT-HB-Hib 2',
-    'DPT-HB-Hib 3',
-    'Campak/MR 1',
-    'Campak/MR 2'
-  ];
-
   // Check if there's a selected child from navigation state
   useEffect(() => {
+    fetchImmunizationTemplates();
+    
     if (location.state?.selectedChild) {
       // If child is selected from detail schedule, skip to step 2
       setChildData(location.state.selectedChild);
@@ -57,8 +54,37 @@ const InputPemeriksaanPage = () => {
       setAllChildren(data);
     } catch (error) {
       console.error('Error fetching children:', error);
+      alert('Gagal memuat data anak');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchImmunizationTemplates = async () => {
+    try {
+      const templates = await getAllImmunizationTemplates();
+      setImmunizationTemplates(templates);
+      
+      // Build vaccine options from templates
+      const options = [
+        { id: '', label: '-- Tidak ada imunisasi --', dose: '' }
+      ];
+      
+      templates.forEach(template => {
+        template.vaccines.forEach(vaccine => {
+          options.push({
+            id: vaccine.id,
+            label: vaccine.name,
+            dose: vaccine.dose,
+            ageRange: template.ageRange
+          });
+        });
+      });
+      
+      setVaccineOptions(options);
+    } catch (error) {
+      console.error('Error fetching immunization templates:', error);
+      // Fallback ke options lama jika gagal
     }
   };
 
@@ -95,16 +121,33 @@ const InputPemeriksaanPage = () => {
     e.preventDefault();
     try {
       setLoading(true);
+      
+      // Get vaccine name jika ada
+      let immunizationString = '-';
+      if (examData.immunizationVaccineId) {
+        const vaccine = vaccineOptions.find(v => v.id === examData.immunizationVaccineId);
+        if (vaccine) {
+          immunizationString = `${vaccine.label} (Dosis ${vaccine.dose})`;
+        }
+      }
+      
       await createExamination({
         childId: childData.id,
         scheduleId,
-        ...examData
+        weight: examData.weight,
+        height: examData.height,
+        headCircumference: examData.headCircumference,
+        armCircumference: examData.armCircumference,
+        immunization: immunizationString,
+        immunizationVaccineId: examData.immunizationVaccineId || null,
+        notes: examData.notes
       });
+      
       alert('Data pemeriksaan berhasil disimpan!');
       navigate(`/admin/kelola-jadwal/${scheduleId}`);
     } catch (error) {
       console.error('Error saving examination:', error);
-      alert('Gagal menyimpan data pemeriksaan');
+      alert(error.response?.data?.message || 'Gagal menyimpan data pemeriksaan');
     } finally {
       setLoading(false);
     }
@@ -142,7 +185,6 @@ const InputPemeriksaanPage = () => {
     if (step === 1) {
       navigate(`/admin/kelola-jadwal/${scheduleId}`);
     } else if (step === 2 && location.state?.selectedChild) {
-      // If came from detail schedule, go back to detail schedule
       navigate(`/admin/kelola-jadwal/${scheduleId}`);
     } else {
       setStep(step - 1);
@@ -414,7 +456,7 @@ const InputPemeriksaanPage = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Berat Badan (kg)
+                    Berat Badan (kg) *
                   </label>
                   <input
                     type="number"
@@ -429,7 +471,7 @@ const InputPemeriksaanPage = () => {
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Tinggi Badan (cm)
+                    Tinggi Badan (cm) *
                   </label>
                   <input
                     type="number"
@@ -444,7 +486,7 @@ const InputPemeriksaanPage = () => {
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Lingkar Kepala (cm)
+                    Lingkar Kepala (cm) *
                   </label>
                   <input
                     type="number"
@@ -459,7 +501,7 @@ const InputPemeriksaanPage = () => {
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Lingkar Lengan (cm)
+                    Lingkar Lengan (cm) *
                   </label>
                   <input
                     type="number"
@@ -475,19 +517,24 @@ const InputPemeriksaanPage = () => {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Imunisasi
+                  Imunisasi (Vaksin dari Database)
                 </label>
                 <select
-                  value={examData.immunization}
-                  onChange={(e) => setExamData({...examData, immunization: e.target.value})}
+                  value={examData.immunizationVaccineId}
+                  onChange={(e) => setExamData({...examData, immunizationVaccineId: e.target.value})}
                   className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
-                  {immunizationOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option === '-' ? 'Tidak ada imunisasi' : option}
+                  {vaccineOptions.map((option) => (
+                    <option key={option.id || 'empty'} value={option.id}>
+                      {option.label}
+                      {option.dose && ` (Dosis ${option.dose})`}
+                      {option.ageRange && ` - ${option.ageRange}`}
                     </option>
                   ))}
                 </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  💡 Vaksin dimuat dari database master
+                </p>
               </div>
 
               <div>

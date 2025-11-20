@@ -20,8 +20,9 @@ import DetailJadwalAdmin from './pages/admin/DetailJadwalAdmin';
 import DaftarAnakAdminPage from './pages/admin/DaftarAnakAdminPage'; // 🆕 NEW
 import KPSPPage from './pages/KPSPPage';
 import ImunisasiPage from './pages/ImunisasiPage';
+import KelolaImunisasiAdminPage from './pages/admin/KelolaImunisasiAdminPage';
 
-
+KelolaImunisasiAdminPage
 // Tambahkan di dalam <Routes>
 
 const ProtectedRoute = ({ children }) => {
@@ -124,6 +125,15 @@ function App() {
             </AdminRoute>
           } 
         />
+
+        <Route 
+  path="/admin/kelola-imunisasi" 
+  element={
+    <AdminRoute>
+      <KelolaImunisasiAdminPage />
+    </AdminRoute>
+  } 
+/>
         {/* 🆕 NEW: Input Pemeriksaan Anak */}
         <Route 
           path="/admin/input-pemeriksaan/:scheduleId" 

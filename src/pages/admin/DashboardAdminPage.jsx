@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAllChildren } from '../../services/adminService';
 import { logout } from '../../services/authService';
-import { Calendar, Users, FileText, TrendingUp, LogOut, Baby } from 'lucide-react';
+import { Calendar, Users, FileText, TrendingUp, LogOut, Baby, Syringe } from 'lucide-react';
 
 const DashboardAdminPage = () => {
   const navigate = useNavigate();
@@ -56,6 +56,15 @@ const DashboardAdminPage = () => {
       bgColor: 'from-blue-50 to-blue-100',
       iconColor: 'text-blue-600',
       path: '/admin/daftar-anak'
+    },
+    {
+      title: 'Kelola Imunisasi',
+      description: 'Master data vaksin & imunisasi',
+      icon: Syringe,
+      color: 'from-pink-500 to-pink-600',
+      bgColor: 'from-pink-50 to-pink-100',
+      iconColor: 'text-pink-600',
+      path: '/admin/kelola-imunisasi'
     },
     {
       title: 'Laporan',
@@ -158,7 +167,7 @@ const DashboardAdminPage = () => {
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Menu Utama</h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {menuItems.map((item, index) => {
             const Icon = item.icon;
             return (
@@ -230,6 +239,18 @@ const DashboardAdminPage = () => {
               </div>
             </div>
 
+            <div className="flex items-start gap-3 p-4 bg-pink-50 rounded-xl">
+              <div className="w-10 h-10 bg-pink-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-xl">💉</span>
+              </div>
+              <div>
+                <p className="font-semibold text-gray-800 text-sm">Kelola Imunisasi</p>
+                <p className="text-xs text-gray-600 mt-1">
+                  Kelola master data vaksin dan jadwal imunisasi
+                </p>
+              </div>
+            </div>
+
             <div className="flex items-start gap-3 p-4 bg-green-50 rounded-xl">
               <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
                 <span className="text-xl">📊</span>
@@ -241,18 +262,6 @@ const DashboardAdminPage = () => {
                 </p>
               </div>
             </div>
-
-            <div className="flex items-start gap-3 p-4 bg-orange-50 rounded-xl">
-              <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-xl">💉</span>
-              </div>
-              <div>
-                <p className="font-semibold text-gray-800 text-sm">Input Pemeriksaan</p>
-                <p className="text-xs text-gray-600 mt-1">
-                  Input data pemeriksaan dan imunisasi anak
-                </p>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -260,4 +269,4 @@ const DashboardAdminPage = () => {
   );
 };
 
-export default DashboardAdminPage
+export default DashboardAdminPage;
