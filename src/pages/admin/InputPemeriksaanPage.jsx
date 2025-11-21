@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { ChevronLeft, Search, User, Calendar, Check, AlertCircle, Users } from 'lucide-react';
+import { ChevronLeft, Search, User, Calendar, Check, AlertCircle, Users, Syringe, Plus, X } from 'lucide-react';
 import { 
   searchChildByNIK, 
   createExamination, 
@@ -12,37 +12,34 @@ const InputPemeriksaanPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { scheduleId } = useParams();
-  const [step, setStep] = useState(1); // 1: search/list, 2: verify, 3: input
+  const [step, setStep] = useState(1);
   const [nik, setNik] = useState('');
   const [childData, setChildData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [allChildren, setAllChildren] = useState([]);
-  const [searchMode, setSearchMode] = useState(false); // toggle between list and search
+  const [searchMode, setSearchMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Immunization state
+  // ✅ UPDATED - Immunization state with multiple vaccines
   const [immunizationTemplates, setImmunizationTemplates] = useState([]);
   const [vaccineOptions, setVaccineOptions] = useState([]);
+  const [selectedVaccines, setSelectedVaccines] = useState([]); // Array of vaccine IDs
   
   const [examData, setExamData] = useState({
     weight: '',
     height: '',
     headCircumference: '',
     armCircumference: '',
-    immunizationVaccineId: '', // Changed from string to ID
     notes: ''
   });
 
-  // Check if there's a selected child from navigation state
   useEffect(() => {
     fetchImmunizationTemplates();
     
     if (location.state?.selectedChild) {
-      // If child is selected from detail schedule, skip to step 2
       setChildData(location.state.selectedChild);
       setStep(2);
     } else {
-      // Otherwise, fetch all children for selection
       fetchAllChildren();
     }
   }, [location.state]);
@@ -66,17 +63,17 @@ const InputPemeriksaanPage = () => {
       setImmunizationTemplates(templates);
       
       // Build vaccine options from templates
-      const options = [
-        { id: '', label: '-- Tidak ada imunisasi --', dose: '' }
-      ];
+      const options = [];
       
       templates.forEach(template => {
         template.vaccines.forEach(vaccine => {
           options.push({
             id: vaccine.id,
-            label: vaccine.name,
+            name: vaccine.name,
             dose: vaccine.dose,
-            ageRange: template.ageRange
+            description: vaccine.description,
+            ageRange: template.ageRange,
+            recommendedAge: vaccine.recommendedAge
           });
         });
       });
@@ -84,7 +81,6 @@ const InputPemeriksaanPage = () => {
       setVaccineOptions(options);
     } catch (error) {
       console.error('Error fetching immunization templates:', error);
-      // Fallback ke options lama jika gagal
     }
   };
 
@@ -117,20 +113,37 @@ const InputPemeriksaanPage = () => {
     }
   };
 
+  // ✅ NEW - Toggle vaccine selection
+  const handleVaccineToggle = (vaccineId) => {
+    setSelectedVaccines(prev => {
+      if (prev.includes(vaccineId)) {
+        return prev.filter(id => id !== vaccineId);
+      } else {
+        return [...prev, vaccineId];
+      }
+    });
+  };
+
+  // ✅ UPDATED - Submit with multiple vaccines
   const handleSubmitExamination = async (e) => {
     e.preventDefault();
     try {
       setLoading(true);
       
-      // Get vaccine name jika ada
+      // Build immunization string for display
       let immunizationString = '-';
-      if (examData.immunizationVaccineId) {
-        const vaccine = vaccineOptions.find(v => v.id === examData.immunizationVaccineId);
-        if (vaccine) {
-          immunizationString = `${vaccine.label} (Dosis ${vaccine.dose})`;
-        }
+      if (selectedVaccines.length > 0) {
+        const vaccineNames = selectedVaccines
+          .map(id => {
+            const vaccine = vaccineOptions.find(v => v.id === id);
+            return vaccine ? `${vaccine.name} (Dosis ${vaccine.dose})` : null;
+          })
+          .filter(Boolean);
+        
+        immunizationString = vaccineNames.join(', ');
       }
       
+      // ✅ Send vaccineIds array to backend
       await createExamination({
         childId: childData.id,
         scheduleId,
@@ -139,11 +152,11 @@ const InputPemeriksaanPage = () => {
         headCircumference: examData.headCircumference,
         armCircumference: examData.armCircumference,
         immunization: immunizationString,
-        immunizationVaccineId: examData.immunizationVaccineId || null,
+        vaccineIds: selectedVaccines, // ✅ NEW - Array of vaccine IDs
         notes: examData.notes
       });
       
-      alert('Data pemeriksaan berhasil disimpan!');
+      alert(`Pemeriksaan berhasil disimpan!\n${selectedVaccines.length} vaksin tercatat.`);
       navigate(`/admin/kelola-jadwal/${scheduleId}`);
     } catch (error) {
       console.error('Error saving examination:', error);
@@ -452,94 +465,171 @@ const InputPemeriksaanPage = () => {
               <p className="font-bold text-gray-800">{childData.fullName}</p>
             </div>
 
-            <form onSubmit={handleSubmitExamination} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Berat Badan (kg) *
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    required
-                    placeholder="12.5"
-                    value={examData.weight}
-                    onChange={(e) => setExamData({...examData, weight: e.target.value})}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
-                </div>
+            <form onSubmit={handleSubmitExamination} className="space-y-6">
+              {/* Anthropometric Data */}
+              <div>
+                <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <User className="w-4 h-4 text-purple-600" />
+                  </div>
+                  Data Antropometri
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Berat Badan (kg) *
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      required
+                      placeholder="12.5"
+                      value={examData.weight}
+                      onChange={(e) => setExamData({...examData, weight: e.target.value})}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Tinggi Badan (cm) *
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    required
-                    placeholder="85.5"
-                    value={examData.height}
-                    onChange={(e) => setExamData({...examData, height: e.target.value})}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
-                </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Tinggi Badan (cm) *
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      required
+                      placeholder="85.5"
+                      value={examData.height}
+                      onChange={(e) => setExamData({...examData, height: e.target.value})}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Lingkar Kepala (cm) *
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    required
-                    placeholder="48.5"
-                    value={examData.headCircumference}
-                    onChange={(e) => setExamData({...examData, headCircumference: e.target.value})}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
-                </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Lingkar Kepala (cm) *
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      required
+                      placeholder="48.5"
+                      value={examData.headCircumference}
+                      onChange={(e) => setExamData({...examData, headCircumference: e.target.value})}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Lingkar Lengan (cm) *
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    required
-                    placeholder="15.2"
-                    value={examData.armCircumference}
-                    onChange={(e) => setExamData({...examData, armCircumference: e.target.value})}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Lingkar Lengan (cm) *
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      required
+                      placeholder="15.2"
+                      value={examData.armCircumference}
+                      onChange={(e) => setExamData({...examData, armCircumference: e.target.value})}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    />
+                  </div>
                 </div>
               </div>
 
+              {/* ✅ NEW - Vaccines Selection with Checkbox */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Imunisasi (Vaksin dari Database)
-                </label>
-                <select
-                  value={examData.immunizationVaccineId}
-                  onChange={(e) => setExamData({...examData, immunizationVaccineId: e.target.value})}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                >
-                  {vaccineOptions.map((option) => (
-                    <option key={option.id || 'empty'} value={option.id}>
-                      {option.label}
-                      {option.dose && ` (Dosis ${option.dose})`}
-                      {option.ageRange && ` - ${option.ageRange}`}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-gray-500 mt-1">
-                  💡 Vaksin dimuat dari database master
+                <h3 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
+                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                    <Syringe className="w-4 h-4 text-green-600" />
+                  </div>
+                  Vaksin yang Diberikan
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Pilih vaksin yang diberikan saat pemeriksaan (bisa lebih dari 1)
+                </p>
+                
+                <div className="max-h-80 overflow-y-auto border-2 border-gray-200 rounded-xl p-4 space-y-2 bg-gray-50">
+                  {vaccineOptions.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <Syringe className="w-12 h-12 mx-auto mb-2 opacity-30" />
+                      <p>Belum ada data vaksin tersedia</p>
+                    </div>
+                  ) : (
+                    vaccineOptions.map(vaccine => (
+                      <label
+                        key={vaccine.id}
+                        className="flex items-start gap-3 p-3 hover:bg-white rounded-lg cursor-pointer transition border-2 border-transparent hover:border-green-300"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedVaccines.includes(vaccine.id)}
+                          onChange={() => handleVaccineToggle(vaccine.id)}
+                          className="mt-1 w-5 h-5 text-green-600 rounded focus:ring-2 focus:ring-green-500"
+                        />
+                        <div className="flex-1">
+                          <p className="font-semibold text-gray-800 text-sm">{vaccine.name}</p>
+                          <p className="text-xs text-gray-600 mb-1">{vaccine.description}</p>
+                          <div className="flex gap-2 flex-wrap">
+                            <span className="text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded">
+                              {vaccine.ageRange}
+                            </span>
+                            <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">
+                              Dosis {vaccine.dose}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {vaccine.recommendedAge}
+                            </span>
+                          </div>
+                        </div>
+                      </label>
+                    ))
+                  )}
+                </div>
+
+                {/* ✅ Selected Vaccines Summary */}
+                {selectedVaccines.length > 0 && (
+                  <div className="mt-3 p-4 bg-green-50 border-2 border-green-200 rounded-xl">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Check className="w-5 h-5 text-green-600" />
+                      <p className="font-semibold text-green-900">
+                        {selectedVaccines.length} vaksin dipilih
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedVaccines.map(vaccineId => {
+                        const vaccine = vaccineOptions.find(v => v.id === vaccineId);
+                        return vaccine ? (
+                          <div
+                            key={vaccineId}
+                            className="inline-flex items-center gap-1 bg-white px-3 py-1 rounded-full text-xs font-semibold text-gray-700 border border-green-300"
+                          >
+                            <Syringe className="w-3 h-3 text-green-600" />
+                            {vaccine.name}
+                            <button
+                              type="button"
+                              onClick={() => handleVaccineToggle(vaccineId)}
+                              className="ml-1 text-red-500 hover:text-red-700"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ) : null;
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  Vaksin yang dipilih akan otomatis tercatat di roadmap imunisasi anak
                 </p>
               </div>
 
+              {/* Notes */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Catatan (Opsional)
+                  Catatan Pemeriksaan (Opsional)
                 </label>
                 <textarea
                   placeholder="Tambahkan catatan pemeriksaan..."
@@ -550,14 +640,33 @@ const InputPemeriksaanPage = () => {
                 />
               </div>
 
+              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:shadow-lg transition font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                <Check className="w-5 h-5" />
-                {loading ? 'Menyimpan...' : 'Simpan Pemeriksaan'}
+                <Check className="w-6 h-6" />
+                {loading ? 'Menyimpan...' : 'Simpan Pemeriksaan & Vaksin'}
               </button>
+
+              {/* Info Box */}
+              <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm text-blue-800">
+                    <p className="font-semibold mb-1">Yang akan disimpan:</p>
+                    <ul className="space-y-1 list-disc list-inside">
+                      <li>Data antropometri (BB, TB, LK, LL)</li>
+                      <li>Vaksin yang diberikan ({selectedVaccines.length} vaksin)</li>
+                      <li>Catatan pemeriksaan</li>
+                    </ul>
+                    <p className="mt-2 font-semibold text-green-700">
+                      ✓ Roadmap imunisasi akan terupdate otomatis
+                    </p>
+                  </div>
+                </div>
+              </div>
             </form>
           </div>
         )}
