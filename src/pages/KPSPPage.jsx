@@ -1,198 +1,74 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, CheckCircle, AlertCircle } from 'lucide-react';
+import { ChevronLeft, CheckCircle, AlertCircle, Loader } from 'lucide-react';
+import {
+  getMyChildren,
+  getKPSPCategoryByCode,
+  submitKPSPScreening,
+  getChildScreeningHistory
+} from '../services/kpspService';
 
-// Data KPSP Quiz
-const KPSP_DATA = {
-  '6-12': {
-    name: 'KPSP 6-12 Bulan',
-    usia: '6-12 Bulan',
-    totalPertanyaan: 10,
-    pertanyaan: [
-      {
-        id: 1,
-        teks: 'Pada waktu bayi telentang, apakah masih ada lengan dan tungkai bergerak dengan mudah?',
-        tipe: 'ya-tidak'
-      },
-      {
-        id: 2,
-        teks: 'Apakah bayi sudah bisa memegang benda kecil dengan ibu jari dan jari telunjuk?',
-        tipe: 'ya-tidak'
-      },
-      {
-        id: 3,
-        teks: 'Apakah bayi sudah bisa menoleh ke arah suara?',
-        tipe: 'ya-tidak'
-      },
-      {
-        id: 4,
-        teks: 'Apakah bayi sudah bisa duduk tanpa disangga?',
-        tipe: 'ya-tidak'
-      },
-      {
-        id: 5,
-        teks: 'Apakah bayi sudah bisa berdiri dengan bantuan?',
-        tipe: 'ya-tidak'
-      },
-      {
-        id: 6,
-        teks: 'Apakah bayi sudah bisa mengucapkan suku kata seperti "ba-ba" atau "ma-ma"?',
-        tipe: 'ya-tidak'
-      },
-      {
-        id: 7,
-        teks: 'Apakah bayi sudah bisa melambaikan tangan sebagai isyarat selamat tinggal?',
-        tipe: 'ya-tidak'
-      },
-      {
-        id: 8,
-        teks: 'Apakah bayi sudah bisa mencari benda yang jatuh?',
-        tipe: 'ya-tidak'
-      },
-      {
-        id: 9,
-        teks: 'Apakah bayi sudah bisa menunjuk benda dengan jari telunjuk?',
-        tipe: 'ya-tidak'
-      },
-      {
-        id: 10,
-        teks: 'Apakah bayi sudah bisa bermain tepuk tangan?',
-        tipe: 'ya-tidak'
-      }
-    ]
-  },
-  '12-18': {
-    name: 'KPSP 12-18 Bulan',
-    usia: '12-18 Bulan',
-    totalPertanyaan: 10,
-    pertanyaan: [
-      {
-        id: 1,
-        teks: 'Apakah bayi sudah bisa berdiri sendiri tanpa bantuan?',
-        tipe: 'ya-tidak'
-      },
-      {
-        id: 2,
-        teks: 'Apakah bayi sudah bisa berjalan beberapa langkah?',
-        tipe: 'ya-tidak'
-      },
-      {
-        id: 3,
-        teks: 'Apakah bayi sudah bisa menyebutkan 3 kata yang bermakna?',
-        tipe: 'ya-tidak'
-      },
-      {
-        id: 4,
-        teks: 'Apakah bayi sudah bisa memahami 10 perintah sederhana?',
-        tipe: 'ya-tidak'
-      },
-      {
-        id: 5,
-        teks: 'Apakah bayi sudah bisa menyusun 2 balok?',
-        tipe: 'ya-tidak'
-      },
-      {
-        id: 6,
-        teks: 'Apakah bayi sudah bisa meminum dari cangkir sendiri?',
-        tipe: 'ya-tidak'
-      },
-      {
-        id: 7,
-        teks: 'Apakah bayi sudah bisa menunjuk gambar di buku?',
-        tipe: 'ya-tidak'
-      },
-      {
-        id: 8,
-        teks: 'Apakah bayi sudah bisa menggambar goresan?',
-        tipe: 'ya-tidak'
-      },
-      {
-        id: 9,
-        teks: 'Apakah bayi sudah bisa bermain dengan mainan bergerak?',
-        tipe: 'ya-tidak'
-      },
-      {
-        id: 10,
-        teks: 'Apakah bayi sudah bisa menunjuk beberapa bagian tubuhnya?',
-        tipe: 'ya-tidak'
-      }
-    ]
-  },
-  '18-24': {
-    name: 'KPSP 18-24 Bulan',
-    usia: '18-24 Bulan',
-    totalPertanyaan: 10,
-    pertanyaan: [
-      {
-        id: 1,
-        teks: 'Apakah anak sudah bisa berjalan menaiki tangga?',
-        tipe: 'ya-tidak'
-      },
-      {
-        id: 2,
-        teks: 'Apakah anak sudah bisa mengatakan minimal 50 kata?',
-        tipe: 'ya-tidak'
-      },
-      {
-        id: 3,
-        teks: 'Apakah anak sudah bisa membuat kalimat 2 kata?',
-        tipe: 'ya-tidak'
-      },
-      {
-        id: 4,
-        teks: 'Apakah anak sudah bisa bermain dengan mainan sambil membayangkan permainan?',
-        tipe: 'ya-tidak'
-      },
-      {
-        id: 5,
-        teks: 'Apakah anak sudah bisa menyusun 6 balok?',
-        tipe: 'ya-tidak'
-      },
-      {
-        id: 6,
-        teks: 'Apakah anak sudah bisa makan sendiri dengan sendok?',
-        tipe: 'ya-tidak'
-      },
-      {
-        id: 7,
-        teks: 'Apakah anak sudah bisa melepas pakaiannya sendiri?',
-        tipe: 'ya-tidak'
-      },
-      {
-        id: 8,
-        teks: 'Apakah anak sudah bisa menunjuk gambar benda ketika disebutkan?',
-        tipe: 'ya-tidak'
-      },
-      {
-        id: 9,
-        teks: 'Apakah anak sudah bisa berinteraksi dengan anak lain?',
-        tipe: 'ya-tidak'
-      },
-      {
-        id: 10,
-        teks: 'Apakah anak sudah bisa menunjukkan perhatian pada gambar/cerita?',
-        tipe: 'ya-tidak'
-      }
-    ]
-  }
+// Helper function to determine age range
+const getAgeRange = (ageInMonths) => {
+  if (ageInMonths >= 0 && ageInMonths < 6) return '0-6';
+  if (ageInMonths >= 6 && ageInMonths < 12) return '6-12';
+  if (ageInMonths >= 12 && ageInMonths < 18) return '12-18';
+  if (ageInMonths >= 18 && ageInMonths <= 24) return '18-24';
+  return null;
 };
 
 // Halaman Pilih Data Anak
-const SelectChildPage = ({ onSelect, onBack }) => {
-  const [children] = useState([
-    { id: 1, name: 'Gibran', usia: '8 bulan', usiaBulan: 8 },
-    { id: 2, name: 'Wowo', usia: '15 bulan', usiaBulan: 15 }
-  ]);
+const SelectChildPage = ({ onSelect, onBack, completedScreenings }) => {
+  const [children, setChildren] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const getAgeRange = (bulan) => {
-    if (bulan >= 6 && bulan < 12) return '6-12';
-    if (bulan >= 12 && bulan < 18) return '12-18';
-    if (bulan >= 18 && bulan <= 24) return '18-24';
-    return null;
+  useEffect(() => {
+    fetchChildren();
+  }, []);
+
+  const fetchChildren = async () => {
+    try {
+      setLoading(true);
+      const data = await getMyChildren();
+      setChildren(data);
+    } catch (err) {
+      setError('Gagal memuat data anak');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <Loader className="w-12 h-12 animate-spin text-purple-600 mx-auto mb-4" />
+          <p className="text-gray-600">Memuat data anak...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+        <div className="text-center">
+          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <p className="text-red-600 mb-4">{error}</p>
+          <button
+            onClick={fetchChildren}
+            className="px-6 py-2 bg-purple-600 text-white rounded-lg"
+          >
+            Coba Lagi
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
       <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-4 flex items-center gap-3">
         <button onClick={onBack} className="p-1">
           <ChevronLeft size={24} />
@@ -200,75 +76,133 @@ const SelectChildPage = ({ onSelect, onBack }) => {
         <h1 className="text-xl font-bold">Pilih Data Anak</h1>
       </div>
 
-      {/* Content */}
       <div className="p-4 pb-24">
         <p className="text-gray-600 text-sm mb-4">Pilih anak yang akan diskrining</p>
         
-        <div className="space-y-3">
-          {children.map((child) => {
-            const ageRange = getAgeRange(child.usiaBulan);
-            return (
-              <button
-                key={child.id}
-                onClick={() => onSelect(child, ageRange)}
-                className="w-full bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-2xl p-4 hover:shadow-lg transition text-left"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-bold text-gray-800">{child.name}</h3>
-                    <p className="text-sm text-gray-600">{child.usia}</p>
+        {children.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500">Belum ada data anak</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {children.map((child) => {
+              const ageRange = getAgeRange(child.ageInMonths);
+              const canScreen = ageRange !== null;
+              const isCompleted = completedScreenings.includes(child.id);
+
+              return (
+                <button
+                  key={child.id}
+                  onClick={() => canScreen && !isCompleted && onSelect(child, ageRange)}
+                  disabled={!canScreen || isCompleted}
+                  className={`w-full bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-2xl p-4 transition text-left ${
+                    !canScreen || isCompleted ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-bold text-gray-800">{child.fullName}</h3>
+                      <p className="text-sm text-gray-600">{child.ageInMonths} bulan</p>
+                    </div>
+                    <div className="text-right">
+                      {isCompleted ? (
+                        <div className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full flex items-center gap-1">
+                          <CheckCircle size={14} />
+                          SUDAH DIISI
+                        </div>
+                      ) : canScreen ? (
+                        <p className="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full">
+                          KPSP {ageRange} Bulan
+                        </p>
+                      ) : (
+                        <p className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded-full">
+                          Usia tidak sesuai
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full">
-                      {KPSP_DATA[ageRange]?.name}
-                    </p>
-                  </div>
-                </div>
-              </button>
-            );
-          })}
-        </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
 // Halaman Daftar Kuis
-const KPSPListPage = ({ child, ageRange, onSelectQuiz, onBack }) => {
-  const quiz = KPSP_DATA[ageRange];
-  const [selectedQuiz, setSelectedQuiz] = useState(null);
+const KPSPListPage = ({ child, onSelectQuiz, onBack }) => {
+  const [category, setCategory] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchCategory();
+  }, [child]);
+
+  const fetchCategory = async () => {
+    try {
+      setLoading(true);
+      const code = `KPSP_${child.ageRange.replace('-', '_')}`;
+      const data = await getKPSPCategoryByCode(code);
+      setCategory(data);
+    } catch (err) {
+      setError('Gagal memuat kuesioner');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <Loader className="w-12 h-12 animate-spin text-purple-600" />
+      </div>
+    );
+  }
+
+  if (error || !category) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+        <div className="text-center">
+          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <p className="text-red-600">{error || 'Kuesioner tidak ditemukan'}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
       <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-4 flex items-center gap-3">
         <button onClick={onBack} className="p-1">
           <ChevronLeft size={24} />
         </button>
         <div className="flex-1">
           <h1 className="text-xl font-bold">KPSP</h1>
-          <p className="text-sm text-purple-100">{quiz.usia}</p>
+          <p className="text-sm text-purple-100">{category.name}</p>
         </div>
       </div>
 
-      {/* Content */}
       <div className="p-4 pb-24">
         <div className="bg-purple-50 rounded-2xl p-4 mb-6">
           <h2 className="font-bold text-gray-800 mb-2">Data Anak</h2>
-          <p className="text-sm text-gray-700">{child.name}</p>
+          <p className="text-sm text-gray-700">{child.fullName}</p>
+          <p className="text-xs text-gray-600 mt-1">{child.ageInMonths} bulan</p>
         </div>
 
         <h3 className="font-bold text-gray-800 mb-4">Pilih Kuesioner</h3>
         
-        {/* Quiz Card */}
         <button
-          onClick={() => onSelectQuiz(quiz)}
+          onClick={() => onSelectQuiz(category)}
           className="w-full bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl p-4 hover:shadow-lg transition border-2 border-purple-200"
         >
           <div className="flex items-start justify-between">
             <div className="text-left">
-              <h3 className="font-bold text-gray-800 mb-1">{quiz.name}</h3>
-              <p className="text-sm text-gray-600 mb-3">{quiz.totalPertanyaan} pertanyaan</p>
+              <h3 className="font-bold text-gray-800 mb-1">{category.name}</h3>
+              <p className="text-sm text-gray-600 mb-3">{category.questions.length} pertanyaan</p>
               <div className="inline-block bg-purple-200 text-purple-800 text-xs px-3 py-1 rounded-full font-semibold">
                 Aktif untuk usia ini
               </div>
@@ -277,9 +211,9 @@ const KPSPListPage = ({ child, ageRange, onSelectQuiz, onBack }) => {
           </div>
         </button>
 
-        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-800">
-            <span className="font-semibold">Catatan:</span> Kuesioner ini disesuaikan berdasarkan usia anak Anda. Jawab setiap pertanyaan dengan jujur untuk hasil skrining yang akurat.
+        <div className="mt-6 p-4 bg-red-50 border-2 border-red-200 rounded-lg">
+          <p className="text-sm text-red-800">
+            <span className="font-semibold">⚠️ PERHATIAN:</span> Anda hanya dapat mengisi kuesioner ini SATU KALI. Pastikan semua pertanyaan dijawab dengan benar sebelum mengirim!
           </p>
         </div>
       </div>
@@ -292,21 +226,31 @@ const QuizPage = ({ quiz, child, onComplete, onBack }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState({});
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [validationError, setValidationError] = useState(null);
 
-  const question = quiz.pertanyaan[currentQuestion];
-  const progress = ((currentQuestion + 1) / quiz.pertanyaan.length) * 100;
+  const question = quiz.questions[currentQuestion];
+  const progress = ((currentQuestion + 1) / quiz.questions.length) * 100;
   const isAnswered = answers[question.id] !== undefined;
+  const allAnswered = quiz.questions.every(q => answers[q.id] !== undefined);
 
   const handleAnswer = (value) => {
     setAnswers({
       ...answers,
       [question.id]: value
     });
+    setValidationError(null);
   };
 
   const handleNext = () => {
-    if (currentQuestion < quiz.pertanyaan.length - 1) {
+    if (!isAnswered) {
+      setValidationError('Pertanyaan ini harus dijawab sebelum melanjutkan');
+      return;
+    }
+    
+    if (currentQuestion < quiz.questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
+      setValidationError(null);
     } else {
       setSubmitted(true);
     }
@@ -315,18 +259,46 @@ const QuizPage = ({ quiz, child, onComplete, onBack }) => {
   const handlePrevious = () => {
     if (currentQuestion > 0) {
       setCurrentQuestion(currentQuestion - 1);
+      setValidationError(null);
     }
   };
 
-  const handleSubmit = () => {
-    const yesCount = Object.values(answers).filter(ans => ans === 'ya').length;
-    onComplete({
-      quiz,
-      child,
-      answers,
-      yesCount,
-      totalQuestions: quiz.pertanyaan.length
-    });
+  const handleSubmit = async () => {
+    // Validasi semua pertanyaan sudah dijawab
+    if (!allAnswered) {
+      setValidationError('Semua pertanyaan harus dijawab sebelum mengirim');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      const answersArray = Object.entries(answers).map(([questionId, answer]) => ({
+        questionId,
+        answer: answer === 'ya'
+      }));
+
+      const screeningData = {
+        childId: child.id,
+        categoryId: quiz.id,
+        answers: answersArray,
+        ageAtScreening: child.ageInMonths,
+        notes: ''
+      };
+
+      const result = await submitKPSPScreening(screeningData);
+      
+      onComplete({
+        ...result.data,
+        child,
+        quiz
+      });
+    } catch (error) {
+      console.error('Error submitting screening:', error);
+      alert('Gagal menyimpan hasil skrining. Silakan coba lagi.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (submitted) {
@@ -340,16 +312,26 @@ const QuizPage = ({ quiz, child, onComplete, onBack }) => {
         </div>
 
         <div className="p-4 pb-24">
+          <div className="bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-4 mb-6">
+            <p className="text-sm text-yellow-800">
+              <span className="font-semibold">📋 REVIEW JAWABAN:</span> Periksa kembali semua jawaban Anda. Pastikan semuanya benar karena data ini hanya dapat dikirim SATU KALI.
+            </p>
+          </div>
+
           <div className="bg-purple-50 rounded-2xl p-4 mb-6">
             <h2 className="font-bold text-gray-800 mb-4">Ringkasan Jawaban</h2>
             <div className="space-y-2 max-h-96 overflow-y-auto">
-              {quiz.pertanyaan.map((q, idx) => (
-                <div key={q.id} className="flex items-start gap-3 pb-2 border-b border-gray-200 last:border-b-0">
+              {quiz.questions.map((q, idx) => (
+                <div key={q.id} className="flex items-start gap-3 pb-3 border-b border-gray-200 last:border-b-0">
                   <span className="text-sm font-semibold text-gray-600 w-6">{idx + 1}.</span>
                   <div className="flex-1">
-                    <p className="text-sm text-gray-700 mb-1">{q.teks}</p>
-                    <span className={`inline-block text-xs px-2 py-1 rounded ${answers[q.id] === 'ya' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                      {answers[q.id] === 'ya' ? 'Ya' : 'Tidak'}
+                    <p className="text-sm text-gray-700 mb-2 font-medium">{q.questionText}</p>
+                    <span className={`inline-block text-xs px-3 py-1 rounded-full font-semibold ${
+                      answers[q.id] === 'ya' 
+                        ? 'bg-green-100 text-green-700' 
+                        : 'bg-red-100 text-red-700'
+                    }`}>
+                      {answers[q.id] === 'ya' ? '✓ Ya' : '✗ Tidak'}
                     </span>
                   </div>
                 </div>
@@ -357,18 +339,42 @@ const QuizPage = ({ quiz, child, onComplete, onBack }) => {
             </div>
           </div>
 
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-4 mb-6">
+            <h3 className="font-bold text-blue-900 mb-2">Rekapitulasi</h3>
+            <p className="text-sm text-blue-800">
+              Total Pertanyaan: <span className="font-bold">{quiz.questions.length}</span><br/>
+              Jawaban "Ya": <span className="font-bold text-green-600">{Object.values(answers).filter(a => a === 'ya').length}</span><br/>
+              Jawaban "Tidak": <span className="font-bold text-red-600">{Object.values(answers).filter(a => a === 'tidak').length}</span>
+            </p>
+          </div>
+
+          {validationError && (
+            <div className="bg-red-50 border-2 border-red-200 rounded-lg p-3 mb-4">
+              <p className="text-sm text-red-800">{validationError}</p>
+            </div>
+          )}
+
           <div className="flex gap-3">
             <button
               onClick={() => setSubmitted(false)}
-              className="flex-1 py-3 border-2 border-purple-600 text-purple-600 rounded-xl font-semibold hover:bg-purple-50"
+              disabled={submitting}
+              className="flex-1 py-3 border-2 border-purple-600 text-purple-600 rounded-xl font-semibold hover:bg-purple-50 disabled:opacity-50"
             >
-              Kembali Edit
+              ← Kembali Edit
             </button>
             <button
               onClick={handleSubmit}
-              className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:shadow-lg"
+              disabled={submitting || !allAnswered}
+              className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              Lihat Hasil
+              {submitting ? (
+                <>
+                  <Loader className="w-4 h-4 animate-spin" />
+                  Mengirim...
+                </>
+              ) : (
+                '✓ Kirim Jawaban'
+              )}
             </button>
           </div>
         </div>
@@ -378,31 +384,29 @@ const QuizPage = ({ quiz, child, onComplete, onBack }) => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
       <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-4 flex items-center justify-between">
         <button onClick={onBack} className="p-1">
           <ChevronLeft size={24} />
         </button>
         <h1 className="text-lg font-bold">{quiz.name}</h1>
-        <div className="text-sm">{currentQuestion + 1}/{quiz.totalPertanyaan}</div>
+        <div className="text-sm">{currentQuestion + 1}/{quiz.questions.length}</div>
       </div>
 
-      {/* Progress Bar */}
       <div className="h-1 bg-gray-200">
         <div className="h-full bg-gradient-to-r from-purple-600 to-pink-600 transition-all" style={{ width: `${progress}%` }}></div>
       </div>
 
-      {/* Content */}
       <div className="p-4 pb-24">
-        {/* Question */}
         <div className="mt-6 mb-8">
           <div className="bg-purple-50 rounded-2xl p-4 mb-4">
-            <h3 className="font-bold text-gray-800 mb-2">Pertanyaan {currentQuestion + 1} dari {quiz.totalPertanyaan}</h3>
-            <p className="text-gray-700 text-lg">{question.teks}</p>
+            <h3 className="font-bold text-gray-800 mb-2">Pertanyaan {currentQuestion + 1} dari {quiz.questions.length}</h3>
+            <p className="text-gray-700 text-lg">{question.questionText}</p>
+            {question.instruction && (
+              <p className="text-sm text-gray-500 mt-2 italic">{question.instruction}</p>
+            )}
           </div>
         </div>
 
-        {/* Answer Options */}
         <div className="space-y-3 mb-8">
           <button
             onClick={() => handleAnswer('ya')}
@@ -426,7 +430,12 @@ const QuizPage = ({ quiz, child, onComplete, onBack }) => {
           </button>
         </div>
 
-        {/* Navigation */}
+        {validationError && (
+          <div className="bg-red-50 border-2 border-red-200 rounded-lg p-3 mb-4">
+            <p className="text-sm text-red-800">{validationError}</p>
+          </div>
+        )}
+
         <div className="flex gap-3">
           <button
             onClick={handlePrevious}
@@ -440,7 +449,7 @@ const QuizPage = ({ quiz, child, onComplete, onBack }) => {
             disabled={!isAnswered}
             className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg"
           >
-            {currentQuestion === quiz.pertanyaan.length - 1 ? 'Review' : 'Selanjutnya'}
+            {currentQuestion === quiz.questions.length - 1 ? 'Review →' : 'Selanjutnya →'}
           </button>
         </div>
       </div>
@@ -450,25 +459,34 @@ const QuizPage = ({ quiz, child, onComplete, onBack }) => {
 
 // Halaman Hasil Skrining
 const ResultPage = ({ result, onBack, onNewAssessment }) => {
-  const percentage = (result.yesCount / result.totalQuestions) * 100;
-  let status, statusColor, icon, message;
+  const percentage = (result.totalYes / (result.totalYes + result.totalNo)) * 100;
+  
+  const getStatusInfo = () => {
+    if (result.result === 'SESUAI') {
+      return {
+        status: 'Perkembangan Normal',
+        color: 'green',
+        icon: '✓',
+        message: result.recommendedAction
+      };
+    } else if (result.result === 'MERAGUKAN') {
+      return {
+        status: 'Perlu Stimulasi',
+        color: 'yellow',
+        icon: '⚠',
+        message: result.recommendedAction
+      };
+    } else {
+      return {
+        status: 'Kemungkinan Gangguan Perkembangan',
+        color: 'red',
+        icon: '!',
+        message: result.recommendedAction
+      };
+    }
+  };
 
-  if (percentage >= 80) {
-    status = 'Perkembangan Normal';
-    statusColor = 'green';
-    icon = '✓';
-    message = 'Perkembangan anak Anda sesuai dengan usia. Lanjutkan pemantauan secara berkala.';
-  } else if (percentage >= 50) {
-    status = 'Perlu Stimulasi';
-    statusColor = 'yellow';
-    icon = '⚠';
-    message = 'Anak Anda memerlukan stimulasi tambahan. Konsultasikan dengan petugas kesehatan.';
-  } else {
-    status = 'Kemungkinan Gangguan Perkembangan';
-    statusColor = 'red';
-    icon = '!';
-    message = 'Segera konsultasikan dengan dokter atau ahli perkembangan anak.';
-  }
+  const statusInfo = getStatusInfo();
 
   const colors = {
     green: { bg: 'bg-green-50', text: 'text-green-800', border: 'border-green-200', icon: 'bg-green-100' },
@@ -476,34 +494,40 @@ const ResultPage = ({ result, onBack, onNewAssessment }) => {
     red: { bg: 'bg-red-50', text: 'text-red-800', border: 'border-red-200', icon: 'bg-red-100' }
   };
 
-  const colorScheme = colors[statusColor];
+  const colorScheme = colors[statusInfo.color];
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
       <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-4 flex items-center gap-3">
         <h1 className="text-xl font-bold flex-1">Hasil Skrining</h1>
       </div>
 
-      {/* Content */}
       <div className="p-4 pb-24">
-        {/* Info Anak */}
+        <div className="bg-green-50 border-2 border-green-200 rounded-2xl p-4 mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <CheckCircle className="w-5 h-5 text-green-600" />
+            <p className="text-sm font-semibold text-green-700">JAWABAN BERHASIL DIKIRIM</p>
+          </div>
+          <p className="text-xs text-green-600">Hasil screening telah dikirim ke Petugas Pondasnadu untuk ditinjau lebih lanjut</p>
+        </div>
+
         <div className="bg-purple-50 rounded-2xl p-4 mb-6">
           <p className="text-sm text-gray-600 mb-1">Nama Anak</p>
-          <h2 className="font-bold text-gray-800 text-lg">{result.child.name}</h2>
-          <p className="text-sm text-gray-600 mt-2">Kuesioner: {result.quiz.name}</p>
+          <h2 className="font-bold text-gray-800 text-lg">{result.child.fullName}</h2>
+          <p className="text-sm text-gray-600 mt-2">Kuesioner: {result.category.name}</p>
+          <p className="text-xs text-gray-500 mt-1">
+            Tanggal: {new Date(result.screeningDate).toLocaleDateString('id-ID')}
+          </p>
         </div>
 
-        {/* Status Card */}
         <div className={`${colorScheme.bg} border-2 ${colorScheme.border} rounded-2xl p-6 mb-6 text-center`}>
           <div className={`${colorScheme.icon} w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl`}>
-            {icon}
+            {statusInfo.icon}
           </div>
-          <h3 className={`${colorScheme.text} font-bold text-lg mb-2`}>{status}</h3>
-          <p className={`${colorScheme.text} text-sm`}>{message}</p>
+          <h3 className={`${colorScheme.text} font-bold text-lg mb-2`}>{statusInfo.status}</h3>
+          <p className={`${colorScheme.text} text-sm`}>{statusInfo.message}</p>
         </div>
 
-        {/* Score */}
         <div className="bg-gray-50 rounded-2xl p-4 mb-6">
           <p className="text-gray-600 text-sm mb-2">Skor Hasil</p>
           <div className="flex items-center gap-4">
@@ -517,29 +541,29 @@ const ResultPage = ({ result, onBack, onNewAssessment }) => {
             </div>
             <div className="font-bold text-2xl text-purple-600">{Math.round(percentage)}%</div>
           </div>
-          <p className="text-xs text-gray-600 mt-2">{result.yesCount} dari {result.totalQuestions} jawaban "Ya"</p>
+          <p className="text-xs text-gray-600 mt-2">
+            {result.totalYes} dari {result.totalYes + result.totalNo} jawaban "Ya"
+          </p>
         </div>
 
-        {/* Details */}
         <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-4 mb-6">
           <h4 className="font-bold text-blue-900 mb-3">Interpretasi Hasil</h4>
           <ul className="text-sm text-blue-800 space-y-2">
             <li className="flex gap-2">
               <span>•</span>
-              <span><strong>80-100%:</strong> Perkembangan Normal - Lanjutkan pemantauan rutin</span>
+              <span><strong>SESUAI (80-100%):</strong> Perkembangan Normal - Lanjutkan pemantauan rutin</span>
             </li>
             <li className="flex gap-2">
               <span>•</span>
-              <span><strong>50-79%:</strong> Perlu Stimulasi - Berikan rangsangan tambahan</span>
+              <span><strong>MERAGUKAN (50-79%):</strong> Perlu Stimulasi - Berikan rangsangan tambahan</span>
             </li>
             <li className="flex gap-2">
               <span>•</span>
-              <span><strong>Dibawah 50%:</strong> Kemungkinan Gangguan - Perlu evaluasi lebih lanjut</span>
+              <span><strong>PENYIMPANGAN (&lt;50%):</strong> Kemungkinan Gangguan - Perlu evaluasi lebih lanjut</span>
             </li>
           </ul>
         </div>
 
-        {/* Buttons */}
         <div className="flex gap-3">
           <button
             onClick={onBack}
@@ -561,14 +585,36 @@ const ResultPage = ({ result, onBack, onNewAssessment }) => {
 
 // Main KPSP Page Component
 export default function KPSPPage() {
-  const [currentPage, setCurrentPage] = useState('select-child'); // select-child, quiz-list, quiz, result
+  const [currentPage, setCurrentPage] = useState('select-child');
   const [selectedChild, setSelectedChild] = useState(null);
-  const [selectedAgeRange, setSelectedAgeRange] = useState(null);
   const [selectedQuiz, setSelectedQuiz] = useState(null);
+  const [result, setResult] = useState(null);
+  const [completedScreenings, setCompletedScreenings] = useState([]);
+
+  useEffect(() => {
+    loadCompletedScreenings();
+  }, []);
+
+  const loadCompletedScreenings = async () => {
+    try {
+      const myChildren = await getMyChildren();
+      const completed = [];
+      
+      for (const child of myChildren) {
+        const history = await getChildScreeningHistory(child.id);
+        if (history && history.length > 0) {
+          completed.push(child.id);
+        }
+      }
+      
+      setCompletedScreenings(completed);
+    } catch (err) {
+      console.error('Error loading screening history:', err);
+    }
+  };
 
   const handleSelectChild = (child, ageRange) => {
-    setSelectedChild(child);
-    setSelectedAgeRange(ageRange);
+    setSelectedChild({ ...child, ageRange });
     setCurrentPage('quiz-list');
   };
 
@@ -577,9 +623,10 @@ export default function KPSPPage() {
     setCurrentPage('quiz');
   };
 
-  const handleCompleteQuiz = (result) => {
+  const handleCompleteQuiz = (completionResult) => {
+    setResult(completionResult);
+    setCompletedScreenings([...completedScreenings, completionResult.child.id]);
     setCurrentPage('result');
-    setSelectedQuiz({ ...selectedQuiz, result });
   };
 
   const handleBack = () => {
@@ -594,21 +641,24 @@ export default function KPSPPage() {
 
   const handleNewAssessment = () => {
     setSelectedChild(null);
-    setSelectedAgeRange(null);
     setSelectedQuiz(null);
+    setResult(null);
     setCurrentPage('select-child');
   };
 
   return (
     <div className="bg-gray-100 min-h-screen">
       {currentPage === 'select-child' && (
-        <SelectChildPage onSelect={handleSelectChild} onBack={() => {}} />
+        <SelectChildPage 
+          onSelect={handleSelectChild} 
+          onBack={() => {}}
+          completedScreenings={completedScreenings}
+        />
       )}
       
-      {currentPage === 'quiz-list' && selectedChild && selectedAgeRange && (
+      {currentPage === 'quiz-list' && selectedChild && (
         <KPSPListPage 
-          child={selectedChild} 
-          ageRange={selectedAgeRange}
+          child={selectedChild}
           onSelectQuiz={handleSelectQuiz}
           onBack={handleBack}
         />
@@ -623,9 +673,9 @@ export default function KPSPPage() {
         />
       )}
       
-      {currentPage === 'result' && selectedQuiz?.result && (
+      {currentPage === 'result' && result && (
         <ResultPage 
-          result={selectedQuiz.result}
+          result={result}
           onBack={handleNewAssessment}
           onNewAssessment={handleNewAssessment}
         />

@@ -22,8 +22,13 @@ import KPSPPage from './pages/KPSPPage';
 import ImunisasiPage from './pages/ImunisasiPage';
 import KelolaImunisasiAdminPage from './pages/admin/KelolaImunisasiAdminPage';
 
-KelolaImunisasiAdminPage
-// Tambahkan di dalam <Routes>
+
+// Di file routes Anda
+import KelolaKPSPPage from './pages/admin/KelolaKPSPPage';
+import ScreeningDetailPage from './pages/admin/ScreeningDetailPage';
+
+// Tambahkan routes:
+
 
 const ProtectedRoute = ({ children }) => {
   const user = getCurrentUser();
@@ -116,6 +121,25 @@ function App() {
             </AdminRoute>
           } 
         />
+
+        <Route 
+          path="/admin/kelola-kpsp" 
+          element={
+              <AdminRoute>
+                <KelolaKPSPPage />
+              </AdminRoute>
+          } 
+        />
+
+        <Route 
+          path="/admin/kpsp/screening/:screeningId" 
+          element={
+            <AdminRoute>
+              <ScreeningDetailPage />
+            </AdminRoute>
+          } 
+        />
+        
         {/* 🆕 NEW: Kelola Jadwal Posyandu */}
         <Route 
           path="/admin/kelola-jadwal" 

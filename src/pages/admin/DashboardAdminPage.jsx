@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAllChildren } from '../../services/adminService';
+import { getKPSPStatistics } from '../../services/kpspService';
 import { logout } from '../../services/authService';
-import { Calendar, Users, FileText, TrendingUp, LogOut, Baby, Syringe } from 'lucide-react';
+import { Calendar, Users, FileText, TrendingUp, LogOut, Baby, Syringe, ClipboardCheck } from 'lucide-react';
 
 const DashboardAdminPage = () => {
   const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalChildren: 0,
     totalSchedules: 0,
-    totalExaminations: 0
+    totalExaminations: 0,
+    totalKPSPScreenings: 0
   });
   const [loading, setLoading] = useState(true);
 
@@ -21,10 +23,20 @@ const DashboardAdminPage = () => {
     try {
       setLoading(true);
       const childrenData = await getAllChildren();
+      
+      // Fetch KPSP statistics
+      let kpspStats = { totalScreenings: 0 };
+      try {
+        kpspStats = await getKPSPStatistics();
+      } catch (err) {
+        console.error('Error fetching KPSP stats:', err);
+      }
+
       setStats({
         totalChildren: childrenData.length,
-        totalSchedules: 0, // TODO: Add API call
-        totalExaminations: 0 // TODO: Add API call
+        totalSchedules: 0,
+        totalExaminations: 0,
+        totalKPSPScreenings: kpspStats.totalScreenings || 0
       });
     } catch (err) {
       console.error('Error fetching stats:', err);
@@ -65,6 +77,15 @@ const DashboardAdminPage = () => {
       bgColor: 'from-pink-50 to-pink-100',
       iconColor: 'text-pink-600',
       path: '/admin/kelola-imunisasi'
+    },
+    {
+      title: 'Kelola KPSP',
+      description: 'Data screening & kuesioner',
+      icon: ClipboardCheck,
+      color: 'from-orange-500 to-orange-600',
+      bgColor: 'from-orange-50 to-orange-100',
+      iconColor: 'text-orange-600',
+      path: '/admin/kelola-kpsp'
     },
     {
       title: 'Laporan',
@@ -112,7 +133,7 @@ const DashboardAdminPage = () => {
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           {/* Total Anak */}
           <div className="bg-white rounded-2xl shadow-md p-6 border-l-4 border-purple-500">
             <div className="flex items-center justify-between">
@@ -160,6 +181,22 @@ const DashboardAdminPage = () => {
               </div>
             </div>
           </div>
+
+          {/* Total KPSP Screening */}
+          <div className="bg-white rounded-2xl shadow-md p-6 border-l-4 border-orange-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-500 text-sm font-medium mb-1">KPSP Screening</p>
+                <p className="text-4xl font-bold text-gray-800">
+                  {stats.totalKPSPScreenings}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">Total skrining</p>
+              </div>
+              <div className="bg-orange-100 p-4 rounded-2xl">
+                <ClipboardCheck className="w-10 h-10 text-orange-600" />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Menu Cards */}
@@ -167,7 +204,7 @@ const DashboardAdminPage = () => {
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Menu Utama</h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {menuItems.map((item, index) => {
             const Icon = item.icon;
             return (
@@ -251,14 +288,14 @@ const DashboardAdminPage = () => {
               </div>
             </div>
 
-            <div className="flex items-start gap-3 p-4 bg-green-50 rounded-xl">
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-xl">📊</span>
+            <div className="flex items-start gap-3 p-4 bg-orange-50 rounded-xl">
+              <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-xl">📝</span>
               </div>
               <div>
-                <p className="font-semibold text-gray-800 text-sm">Laporan</p>
+                <p className="font-semibold text-gray-800 text-sm">Kelola KPSP</p>
                 <p className="text-xs text-gray-600 mt-1">
-                  Lihat statistik dan laporan pemeriksaan
+                  Monitor hasil screening dan kelola kuesioner
                 </p>
               </div>
             </div>
