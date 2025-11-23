@@ -11,26 +11,37 @@ import {
   CheckCircle,
   AlertCircle,
   XCircle,
-  ClipboardList
+  ClipboardList,
+  X
 } from 'lucide-react';
 import {
   getAllScreenings,
   getKPSPStatistics,
   getKPSPCategories,
-//   createKPSPQuestion,
-//   updateKPSPQuestion,
-//   deleteKPSPQuestion
+  createKPSPQuestion,
+  updateKPSPQuestion,
+  deleteKPSPQuestion
 } from '../../services/kpspService';
 
 const KelolaKPSPPage = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('screenings'); // screenings, questions, statistics
+  const [activeTab, setActiveTab] = useState('screenings');
   const [screenings, setScreenings] = useState([]);
   const [categories, setCategories] = useState([]);
   const [statistics, setStatistics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterResult, setFilterResult] = useState('');
+
+  // Modal states
+  const [showQuestionModal, setShowQuestionModal] = useState(false);
+  const [editingQuestion, setEditingQuestion] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [questionForm, setQuestionForm] = useState({
+    questionText: '',
+    developmentArea: '',
+    instruction: ''
+  });
 
   useEffect(() => {
     fetchData();
@@ -50,8 +61,78 @@ const KelolaKPSPPage = () => {
       setStatistics(statsData);
     } catch (error) {
       console.error('Error fetching KPSP data:', error);
+      alert('Gagal memuat data KPSP');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handle add question
+  const handleAddQuestion = (category) => {
+    setSelectedCategory(category);
+    setEditingQuestion(null);
+    setQuestionForm({
+      questionText: '',
+      developmentArea: '',
+      instruction: ''
+    });
+    setShowQuestionModal(true);
+  };
+
+  // Handle edit question
+  const handleEditQuestion = (category, question) => {
+    setSelectedCategory(category);
+    setEditingQuestion(question);
+    setQuestionForm({
+      questionText: question.questionText,
+      developmentArea: question.developmentArea,
+      instruction: question.instruction || ''
+    });
+    setShowQuestionModal(true);
+  };
+
+  // Handle save question
+  const handleSaveQuestion = async () => {
+    try {
+      if (!questionForm.questionText || !questionForm.developmentArea) {
+        alert('Mohon isi semua field yang wajib');
+        return;
+      }
+
+      if (editingQuestion) {
+        // Update existing question
+        await updateKPSPQuestion(editingQuestion.id, questionForm);
+        alert('Pertanyaan berhasil diupdate');
+      } else {
+        // Create new question
+        const nextQuestionNumber = selectedCategory.questions.length + 1;
+        await createKPSPQuestion({
+          categoryId: selectedCategory.id,
+          questionNumber: nextQuestionNumber,
+          ...questionForm
+        });
+        alert('Pertanyaan berhasil ditambahkan');
+      }
+
+      setShowQuestionModal(false);
+      fetchData(); // Refresh data
+    } catch (error) {
+      console.error('Error saving question:', error);
+      alert('Gagal menyimpan pertanyaan');
+    }
+  };
+
+  // Handle delete question
+  const handleDeleteQuestion = async (questionId, questionText) => {
+    if (window.confirm(`Yakin ingin menghapus pertanyaan: "${questionText}"?`)) {
+      try {
+        await deleteKPSPQuestion(questionId);
+        alert('Pertanyaan berhasil dihapus');
+        fetchData(); // Refresh data
+      } catch (error) {
+        console.error('Error deleting question:', error);
+        alert('Gagal menghapus pertanyaan');
+      }
     }
   };
 
@@ -286,7 +367,10 @@ const KelolaKPSPPage = () => {
                       Usia {category.minAgeMonths}-{category.maxAgeMonths} bulan • {category.questions.length} pertanyaan
                     </p>
                   </div>
-                  <button className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+                  <button 
+                    onClick={() => handleAddQuestion(category)}
+                    className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+                  >
                     <Plus className="w-4 h-4" />
                     Tambah Pertanyaan
                   </button>
@@ -310,10 +394,16 @@ const KelolaKPSPPage = () => {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition">
+                        <button 
+                          onClick={() => handleEditQuestion(category, question)}
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                        >
                           <Edit className="w-4 h-4" />
                         </button>
-                        <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition">
+                        <button 
+                          onClick={() => handleDeleteQuestion(question.id, question.questionText)}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                        >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -397,6 +487,97 @@ const KelolaKPSPPage = () => {
           </div>
         )}
       </div>
+
+      {/* Question Modal */}
+      {showQuestionModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-gray-800">
+                {editingQuestion ? 'Edit Pertanyaan' : 'Tambah Pertanyaan'}
+              </h3>
+              <button
+                onClick={() => setShowQuestionModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Kategori
+                </label>
+                <input
+                  type="text"
+                  value={selectedCategory?.name || ''}
+                  disabled
+                  className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-xl"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Pertanyaan <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={questionForm.questionText}
+                  onChange={(e) => setQuestionForm({...questionForm, questionText: e.target.value})}
+                  rows="3"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Masukkan pertanyaan screening..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Area Perkembangan <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={questionForm.developmentArea}
+                  onChange={(e) => setQuestionForm({...questionForm, developmentArea: e.target.value})}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option value="">Pilih Area Perkembangan</option>
+                  <option value="Motorik Kasar">Motorik Kasar</option>
+                  <option value="Motorik Halus">Motorik Halus</option>
+                  <option value="Bahasa">Bahasa</option>
+                  <option value="Sosialisasi & Kemandirian">Sosialisasi & Kemandirian</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Instruksi (Opsional)
+                </label>
+                <textarea
+                  value={questionForm.instruction}
+                  onChange={(e) => setQuestionForm({...questionForm, instruction: e.target.value})}
+                  rows="2"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Instruksi tambahan untuk pertanyaan ini..."
+                />
+              </div>
+            </div>
+
+            <div className="sticky bottom-0 bg-gray-50 px-6 py-4 flex gap-3 border-t">
+              <button
+                onClick={() => setShowQuestionModal(false)}
+                className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-100 transition font-semibold"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleSaveQuestion}
+                className="flex-1 px-6 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition font-semibold"
+              >
+                {editingQuestion ? 'Update' : 'Simpan'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

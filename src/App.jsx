@@ -26,7 +26,6 @@ import KelolaImunisasiAdminPage from './pages/admin/KelolaImunisasiAdminPage';
 // Di file routes Anda
 import KelolaKPSPPage from './pages/admin/KelolaKPSPPage';
 import ScreeningDetailPage from './pages/admin/ScreeningDetailPage';
-
 // Tambahkan routes:
 
 
@@ -151,13 +150,13 @@ function App() {
         />
 
         <Route 
-  path="/admin/kelola-imunisasi" 
-  element={
-    <AdminRoute>
-      <KelolaImunisasiAdminPage />
-    </AdminRoute>
-  } 
-/>
+          path="/admin/kelola-imunisasi" 
+          element={
+            <AdminRoute>
+              <KelolaImunisasiAdminPage />
+            </AdminRoute>
+          } 
+        />
         {/* 🆕 NEW: Input Pemeriksaan Anak */}
         <Route 
           path="/admin/input-pemeriksaan/:scheduleId" 
@@ -204,24 +203,21 @@ function App() {
           } 
         />
         <Route 
-  path="/kpsp" 
-  element={
-    <ProtectedRoute>
-      <KPSPPage />
-    </ProtectedRoute>
-  } 
-/>
-
-
-
-<Route 
-  path="/imunisasi" 
-  element={
-    <ProtectedRoute>
-      <ImunisasiPage />
-    </ProtectedRoute>
-  } 
-/>
+          path="/kpsp" 
+          element={
+            <ProtectedRoute>
+              <KPSPPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/imunisasi" 
+          element={
+            <ProtectedRoute>
+              <ImunisasiPage />
+            </ProtectedRoute>
+          } 
+        />
         <Route 
           path="/notifications" 
           element={

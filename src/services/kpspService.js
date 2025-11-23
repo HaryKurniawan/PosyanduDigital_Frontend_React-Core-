@@ -80,3 +80,15 @@ export const deleteKPSPCategory = async (id) => {
   const response = await api.delete(`/kpsp/admin/categories/${id}`);
   return response.data;
 };
+
+// Update KPSP question
+export const updateKPSPQuestion = async (id, questionData) => {
+  const response = await api.put(`/kpsp/admin/questions/${id}`, questionData);
+  return response.data;
+};
+
+// Delete KPSP question
+export const deleteKPSPQuestion = async (id) => {
+  const response = await api.delete(`/kpsp/admin/questions/${id}`);
+  return response.data;
+};

@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Plus, Edit2, Trash2, Syringe, AlertCircle, Save, X } from 'lucide-react';
-import api from '../../services/api';
+import {
+  getAllImmunizationTemplates,
+  createImmunizationTemplate,
+  updateImmunizationTemplate,
+  deleteImmunizationTemplate
+} from '../../services/immunizationService';
 
 const KelolaImunisasiAdminPage = () => {
   const navigate = useNavigate();
@@ -23,8 +28,8 @@ const KelolaImunisasiAdminPage = () => {
   const fetchTemplates = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/posyandu/immunization/templates');
-      setTemplates(response.data);
+      const data = await getAllImmunizationTemplates();
+      setTemplates(data);
     } catch (error) {
       console.error('Error fetching templates:', error);
       alert('Gagal memuat data template imunisasi');
@@ -40,6 +45,7 @@ const KelolaImunisasiAdminPage = () => {
         ageRange: template.ageRange,
         ageInMonths: template.ageInMonths,
         vaccines: template.vaccines.map(v => ({
+          id: v.id,
           name: v.name,
           dose: v.dose,
           description: v.description,
@@ -68,7 +74,7 @@ const KelolaImunisasiAdminPage = () => {
       ...formData,
       vaccines: [
         ...formData.vaccines,
-        { name: '', dose: '', description: '', recommendedAge: '' }
+        { id: null, name: '', dose: '', description: '', recommendedAge: '' }
       ]
     });
   };
@@ -87,6 +93,16 @@ const KelolaImunisasiAdminPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    if (!formData.ageRange.trim()) {
+      alert('Rentang usia tidak boleh kosong');
+      return;
+    }
+
+    if (!formData.ageInMonths) {
+      alert('Usia dalam bulan tidak boleh kosong');
+      return;
+    }
+
     if (formData.vaccines.length === 0) {
       alert('Tambahkan minimal 1 vaksin');
       return;
@@ -107,10 +123,12 @@ const KelolaImunisasiAdminPage = () => {
       };
 
       if (editingTemplate) {
-        // Update not implemented yet in backend
-        alert('Fitur update belum tersedia. Hapus dan buat ulang template.');
+        // UPDATE template
+        await updateImmunizationTemplate(editingTemplate.id, payload);
+        alert('Template berhasil diubah!');
       } else {
-        await api.post('/posyandu/immunization/template', payload);
+        // CREATE template baru
+        await createImmunizationTemplate(payload);
         alert('Template berhasil ditambahkan!');
       }
       
@@ -129,14 +147,12 @@ const KelolaImunisasiAdminPage = () => {
     
     try {
       setLoading(true);
-      // Delete endpoint not in routes yet, you may need to add it
-      alert('Fitur hapus belum tersedia di backend');
-      // await api.delete(`/posyandu/immunization/template/${id}`);
-      // alert('Template berhasil dihapus!');
-      // fetchTemplates();
+      await deleteImmunizationTemplate(id);
+      alert('Template berhasil dihapus!');
+      fetchTemplates();
     } catch (error) {
       console.error('Error deleting template:', error);
-      alert('Gagal menghapus template');
+      alert(error.response?.data?.message || 'Gagal menghapus template');
     } finally {
       setLoading(false);
     }
@@ -282,7 +298,7 @@ const KelolaImunisasiAdminPage = () => {
           <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-gradient-to-r from-purple-600 to-pink-600 text-white p-4 rounded-t-2xl flex justify-between items-center">
               <h2 className="text-xl font-bold">
-                {editingTemplate ? 'Edit Template' : 'Tambah Template Baru'}
+                {editingTemplate ? 'Edit Template Imunisasi' : 'Tambah Template Baru'}
               </h2>
               <button
                 onClick={handleCloseModal}
@@ -424,7 +440,7 @@ const KelolaImunisasiAdminPage = () => {
                   className="flex-1 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition font-semibold disabled:bg-gray-300 flex items-center justify-center gap-2"
                 >
                   <Save className="w-5 h-5" />
-                  {loading ? 'Menyimpan...' : 'Simpan Template'}
+                  {loading ? 'Menyimpan...' : (editingTemplate ? 'Update Template' : 'Simpan Template')}
                 </button>
               </div>
             </form>
