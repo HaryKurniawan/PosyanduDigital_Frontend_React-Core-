@@ -21,13 +21,8 @@ import DaftarAnakAdminPage from './pages/admin/DaftarAnakAdminPage'; // 🆕 NEW
 import KPSPPage from './pages/KPSPPage';
 import ImunisasiPage from './pages/ImunisasiPage';
 import KelolaImunisasiAdminPage from './pages/admin/KelolaImunisasiAdminPage';
-
-
-// Di file routes Anda
 import KelolaKPSPPage from './pages/admin/KelolaKPSPPage';
 import ScreeningDetailPage from './pages/admin/ScreeningDetailPage';
-// Tambahkan routes:
-
 
 const ProtectedRoute = ({ children }) => {
   const user = getCurrentUser();
@@ -49,13 +44,11 @@ const AdminRoute = ({ children }) => {
   return children;
 };
 
-// Public Route Component (redirect to home if logged in)
 const PublicRoute = ({ children }) => {
   const user = getCurrentUser();
   
   if (user && user.token) {
-    // Redirect based on role
-    if (user.role === 'ADMIN') { // 🔧 FIXED: Harus uppercase ADMIN
+    if (user.role === 'ADMIN') { 
       return <Navigate to="/dashboard-admin" />;
     }
     return <Navigate to="/home" />;
@@ -86,9 +79,8 @@ function App() {
           } 
         />
 
-        {/* ============================================ */}
         {/* Admin Routes */}
-        {/* ============================================ */}
+        
         <Route 
           path="/dashboard-admin" 
           element={
@@ -139,7 +131,6 @@ function App() {
           } 
         />
         
-        {/* 🆕 NEW: Kelola Jadwal Posyandu */}
         <Route 
           path="/admin/kelola-jadwal" 
           element={
@@ -157,7 +148,7 @@ function App() {
             </AdminRoute>
           } 
         />
-        {/* 🆕 NEW: Input Pemeriksaan Anak */}
+
         <Route 
           path="/admin/input-pemeriksaan/:scheduleId" 
           element={
@@ -167,9 +158,8 @@ function App() {
           } 
         />
 
-        {/* ============================================ */}
         {/* User Protected Routes */}
-        {/* ============================================ */}
+
         <Route 
           path="/home" 
           element={
@@ -250,7 +240,6 @@ function App() {
             </ProtectedRoute>
           } 
         />
-        {/* 🆕 NEW: Riwayat Pemeriksaan */}
         <Route 
           path="/riwayat-pemeriksaan" 
           element={
@@ -260,9 +249,8 @@ function App() {
           } 
         />
 
-        {/* ============================================ */}
         {/* Default & 404 Routes */}
-        {/* ============================================ */}
+
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
