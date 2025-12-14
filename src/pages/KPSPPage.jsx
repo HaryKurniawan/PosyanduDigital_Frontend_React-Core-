@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, CheckCircle, AlertCircle, Loader } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { CheckCircle, AlertCircle, Loader } from 'lucide-react';
 import {
   getMyChildren,
   getKPSPCategoryByCode,
   submitKPSPScreening,
   getChildScreeningHistory
 } from '../services/kpspService';
+import PageHeader from '../components/PageHeader';
 
 // Helper function to determine age range
 const getAgeRange = (ageInMonths) => {
@@ -69,16 +71,11 @@ const SelectChildPage = ({ onSelect, onBack, completedScreenings }) => {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-4 flex items-center gap-3">
-        <button onClick={onBack} className="p-1">
-          <ChevronLeft size={24} />
-        </button>
-        <h1 className="text-xl font-bold">Pilih Data Anak</h1>
-      </div>
+      <PageHeader title="Pilih Data Anak" backTo="/home" />
 
-      <div className="p-4 pb-24">
+      <div className="px-4 py-4 pb-24">
         <p className="text-gray-600 text-sm mb-4">Pilih anak yang akan diskrining</p>
-        
+
         {children.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-500">Belum ada data anak</p>
@@ -95,9 +92,8 @@ const SelectChildPage = ({ onSelect, onBack, completedScreenings }) => {
                   key={child.id}
                   onClick={() => canScreen && !isCompleted && onSelect(child, ageRange)}
                   disabled={!canScreen || isCompleted}
-                  className={`w-full bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-2xl p-4 transition text-left ${
-                    !canScreen || isCompleted ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg'
-                  }`}
+                  className={`w-full bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-2xl p-4 transition text-left ${!canScreen || isCompleted ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg'
+                    }`}
                 >
                   <div className="flex items-center justify-between">
                     <div>
@@ -176,17 +172,9 @@ const KPSPListPage = ({ child, onSelectQuiz, onBack }) => {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-4 flex items-center gap-3">
-        <button onClick={onBack} className="p-1">
-          <ChevronLeft size={24} />
-        </button>
-        <div className="flex-1">
-          <h1 className="text-xl font-bold">KPSP</h1>
-          <p className="text-sm text-purple-100">{category.name}</p>
-        </div>
-      </div>
+      <PageHeader title="KPSP" onBack={onBack} />
 
-      <div className="p-4 pb-24">
+      <div className="px-4 py-4 pb-24">
         <div className="bg-purple-50 rounded-2xl p-4 mb-6">
           <h2 className="font-bold text-gray-800 mb-2">Data Anak</h2>
           <p className="text-sm text-gray-700">{child.fullName}</p>
@@ -194,7 +182,7 @@ const KPSPListPage = ({ child, onSelectQuiz, onBack }) => {
         </div>
 
         <h3 className="font-bold text-gray-800 mb-4">Pilih Kuesioner</h3>
-        
+
         <button
           onClick={() => onSelectQuiz(category)}
           className="w-full bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl p-4 hover:shadow-lg transition border-2 border-purple-200"
@@ -247,7 +235,7 @@ const QuizPage = ({ quiz, child, onComplete, onBack }) => {
       setValidationError('Pertanyaan ini harus dijawab sebelum melanjutkan');
       return;
     }
-    
+
     if (currentQuestion < quiz.questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
       setValidationError(null);
@@ -287,7 +275,7 @@ const QuizPage = ({ quiz, child, onComplete, onBack }) => {
       };
 
       const result = await submitKPSPScreening(screeningData);
-      
+
       onComplete({
         ...result.data,
         child,
@@ -304,14 +292,9 @@ const QuizPage = ({ quiz, child, onComplete, onBack }) => {
   if (submitted) {
     return (
       <div className="min-h-screen bg-white">
-        <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-4 flex items-center gap-3">
-          <button onClick={onBack} className="p-1">
-            <ChevronLeft size={24} />
-          </button>
-          <h1 className="text-xl font-bold">Review Jawaban</h1>
-        </div>
+        <PageHeader title="Review Jawaban" onBack={onBack} />
 
-        <div className="p-4 pb-24">
+        <div className="px-4 py-4 pb-24">
           <div className="bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-4 mb-6">
             <p className="text-sm text-yellow-800">
               <span className="font-semibold">📋 REVIEW JAWABAN:</span> Periksa kembali semua jawaban Anda. Pastikan semuanya benar karena data ini hanya dapat dikirim SATU KALI.
@@ -326,11 +309,10 @@ const QuizPage = ({ quiz, child, onComplete, onBack }) => {
                   <span className="text-sm font-semibold text-gray-600 w-6">{idx + 1}.</span>
                   <div className="flex-1">
                     <p className="text-sm text-gray-700 mb-2 font-medium">{q.questionText}</p>
-                    <span className={`inline-block text-xs px-3 py-1 rounded-full font-semibold ${
-                      answers[q.id] === 'ya' 
-                        ? 'bg-green-100 text-green-700' 
-                        : 'bg-red-100 text-red-700'
-                    }`}>
+                    <span className={`inline-block text-xs px-3 py-1 rounded-full font-semibold ${answers[q.id] === 'ya'
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-red-100 text-red-700'
+                      }`}>
                       {answers[q.id] === 'ya' ? '✓ Ya' : '✗ Tidak'}
                     </span>
                   </div>
@@ -342,8 +324,8 @@ const QuizPage = ({ quiz, child, onComplete, onBack }) => {
           <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-4 mb-6">
             <h3 className="font-bold text-blue-900 mb-2">Rekapitulasi</h3>
             <p className="text-sm text-blue-800">
-              Total Pertanyaan: <span className="font-bold">{quiz.questions.length}</span><br/>
-              Jawaban "Ya": <span className="font-bold text-green-600">{Object.values(answers).filter(a => a === 'ya').length}</span><br/>
+              Total Pertanyaan: <span className="font-bold">{quiz.questions.length}</span><br />
+              Jawaban "Ya": <span className="font-bold text-green-600">{Object.values(answers).filter(a => a === 'ya').length}</span><br />
               Jawaban "Tidak": <span className="font-bold text-red-600">{Object.values(answers).filter(a => a === 'tidak').length}</span>
             </p>
           </div>
@@ -384,19 +366,17 @@ const QuizPage = ({ quiz, child, onComplete, onBack }) => {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-4 flex items-center justify-between">
-        <button onClick={onBack} className="p-1">
-          <ChevronLeft size={24} />
-        </button>
-        <h1 className="text-lg font-bold">{quiz.name}</h1>
-        <div className="text-sm">{currentQuestion + 1}/{quiz.questions.length}</div>
+      <PageHeader
+        title={quiz.name}
+        onBack={onBack}
+        rightElement={<span className="text-sm text-gray-500">{currentQuestion + 1}/{quiz.questions.length}</span>}
+      />
+
+      <div className="h-1 bg-gray-200 fixed top-14 left-0 right-0 z-40">
+        <div className="h-full bg-pink-500 transition-all" style={{ width: `${progress}%` }}></div>
       </div>
 
-      <div className="h-1 bg-gray-200">
-        <div className="h-full bg-gradient-to-r from-purple-600 to-pink-600 transition-all" style={{ width: `${progress}%` }}></div>
-      </div>
-
-      <div className="p-4 pb-24">
+      <div className="pt-2 px-4 pb-24">
         <div className="mt-6 mb-8">
           <div className="bg-purple-50 rounded-2xl p-4 mb-4">
             <h3 className="font-bold text-gray-800 mb-2">Pertanyaan {currentQuestion + 1} dari {quiz.questions.length}</h3>
@@ -410,21 +390,19 @@ const QuizPage = ({ quiz, child, onComplete, onBack }) => {
         <div className="space-y-3 mb-8">
           <button
             onClick={() => handleAnswer('ya')}
-            className={`w-full p-4 rounded-xl font-semibold transition border-2 ${
-              answers[question.id] === 'ya'
-                ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white border-green-600'
-                : 'bg-gray-50 text-gray-800 border-gray-200 hover:border-green-500'
-            }`}
+            className={`w-full p-4 rounded-xl font-semibold transition border-2 ${answers[question.id] === 'ya'
+              ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white border-green-600'
+              : 'bg-gray-50 text-gray-800 border-gray-200 hover:border-green-500'
+              }`}
           >
             ✓ Ya
           </button>
           <button
             onClick={() => handleAnswer('tidak')}
-            className={`w-full p-4 rounded-xl font-semibold transition border-2 ${
-              answers[question.id] === 'tidak'
-                ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white border-red-600'
-                : 'bg-gray-50 text-gray-800 border-gray-200 hover:border-red-500'
-            }`}
+            className={`w-full p-4 rounded-xl font-semibold transition border-2 ${answers[question.id] === 'tidak'
+              ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white border-red-600'
+              : 'bg-gray-50 text-gray-800 border-gray-200 hover:border-red-500'
+              }`}
           >
             ✗ Tidak
           </button>
@@ -460,7 +438,7 @@ const QuizPage = ({ quiz, child, onComplete, onBack }) => {
 // Halaman Hasil Skrining
 const ResultPage = ({ result, onBack, onNewAssessment }) => {
   const percentage = (result.totalYes / (result.totalYes + result.totalNo)) * 100;
-  
+
   const getStatusInfo = () => {
     if (result.result === 'SESUAI') {
       return {
@@ -498,11 +476,9 @@ const ResultPage = ({ result, onBack, onNewAssessment }) => {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-4 flex items-center gap-3">
-        <h1 className="text-xl font-bold flex-1">Hasil Skrining</h1>
-      </div>
+      <PageHeader title="Hasil Skrining" />
 
-      <div className="p-4 pb-24">
+      <div className="px-4 py-4 pb-24">
         <div className="bg-green-50 border-2 border-green-200 rounded-2xl p-4 mb-6">
           <div className="flex items-center gap-2 mb-3">
             <CheckCircle className="w-5 h-5 text-green-600" />
@@ -533,7 +509,7 @@ const ResultPage = ({ result, onBack, onNewAssessment }) => {
           <div className="flex items-center gap-4">
             <div className="flex-1">
               <div className="w-full bg-gray-200 rounded-full h-4 mb-2">
-                <div 
+                <div
                   className="bg-gradient-to-r from-purple-600 to-pink-600 h-4 rounded-full transition-all"
                   style={{ width: `${percentage}%` }}
                 ></div>
@@ -599,14 +575,14 @@ export default function KPSPPage() {
     try {
       const myChildren = await getMyChildren();
       const completed = [];
-      
+
       for (const child of myChildren) {
         const history = await getChildScreeningHistory(child.id);
         if (history && history.length > 0) {
           completed.push(child.id);
         }
       }
-      
+
       setCompletedScreenings(completed);
     } catch (err) {
       console.error('Error loading screening history:', err);
@@ -649,32 +625,32 @@ export default function KPSPPage() {
   return (
     <div className="bg-gray-100 min-h-screen">
       {currentPage === 'select-child' && (
-        <SelectChildPage 
-          onSelect={handleSelectChild} 
-          onBack={() => {}}
+        <SelectChildPage
+          onSelect={handleSelectChild}
+          onBack={() => { }}
           completedScreenings={completedScreenings}
         />
       )}
-      
+
       {currentPage === 'quiz-list' && selectedChild && (
-        <KPSPListPage 
+        <KPSPListPage
           child={selectedChild}
           onSelectQuiz={handleSelectQuiz}
           onBack={handleBack}
         />
       )}
-      
+
       {currentPage === 'quiz' && selectedQuiz && (
-        <QuizPage 
+        <QuizPage
           quiz={selectedQuiz}
           child={selectedChild}
           onComplete={handleCompleteQuiz}
           onBack={handleBack}
         />
       )}
-      
+
       {currentPage === 'result' && result && (
-        <ResultPage 
+        <ResultPage
           result={result}
           onBack={handleNewAssessment}
           onNewAssessment={handleNewAssessment}

@@ -6,82 +6,71 @@ const MobileNavbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const user = JSON.parse(localStorage.getItem('user'));
-  
+
   const isActive = (path) => location.pathname === path;
+
+  const getPageTitle = () => {
+    const titles = {
+      '/home': null,
+      '/edukasi': 'Edukasi',
+      '/jadwal': 'Jadwal',
+      '/profile': 'Profil'
+    };
+    return titles[location.pathname] || null;
+  };
+
+  const pageTitle = getPageTitle();
+  const showUserGreeting = location.pathname === '/home';
+
+  const navItems = [
+    { path: '/home', icon: Home, label: 'Home' },
+    { path: '/edukasi', icon: BookOpen, label: 'Edukasi' },
+    { path: '/jadwal', icon: Calendar, label: 'Jadwal' },
+    { path: '/profile', icon: User, label: 'Profil' }
+  ];
 
   return (
     <>
       {/* Top Navbar */}
-      <div className="bg-white shadow-sm fixed top-0 left-0 right-0 z-50">
-        <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
-          <div>
-            <h1 className="font-bold text-gray-800 text-base sm:text-lg">
-              {user?.name || 'User'}
-            </h1>
-            <p className="text-xs sm:text-sm text-gray-500">Posyandu Digital</p>
-          </div>
+      <div className="bg-white fixed top-0 left-1/2 -translate-x-1/2 z-50 w-full max-w-xl">
+        <div className="flex items-center justify-between px-4 py-3">
+          <h1 className="font-semibold text-gray-800 text-base">
+            {showUserGreeting ? `Hi, ${user?.name || 'User'} 👋` : (pageTitle || 'PODI')}
+          </h1>
           <button
             onClick={() => navigate('/notifications')}
-            className="relative p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="relative p-2 hover:bg-gray-50 rounded-full transition-colors"
           >
-            <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" />
-            <span className="absolute top-1 right-1 w-4 h-4 sm:w-5 sm:h-5 bg-red-500 text-white text-[10px] sm:text-xs rounded-full flex items-center justify-center font-medium">
-              3
-            </span>
+            <Bell className="w-5 h-5 text-gray-600" />
+            <span className="absolute top-1 right-1 w-2 h-2 bg-pink-500 rounded-full" />
           </button>
         </div>
       </div>
 
-      {/* Bottom Navbar */}
-      <div className="bg-white shadow-lg fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 lg:hidden">
-        <div className="grid grid-cols-4 gap-1 px-2 py-2">
-          <button
-            onClick={() => navigate('/home')}
-            className={`flex flex-col items-center gap-1 py-2 px-2 rounded-lg transition-colors ${
-              isActive('/home') 
-                ? 'text-purple-600 bg-purple-50' 
-                : 'text-gray-500 hover:text-purple-600 hover:bg-gray-50'
-            }`}
-          >
-            <Home className="w-5 h-5 sm:w-6 sm:h-6" />
-            <span className="text-[10px] sm:text-xs font-medium">Home</span>
-          </button>
-
-          <button
-            onClick={() => navigate('/edukasi')}
-            className={`flex flex-col items-center gap-1 py-2 px-2 rounded-lg transition-colors ${
-              isActive('/edukasi') 
-                ? 'text-purple-600 bg-purple-50' 
-                : 'text-gray-500 hover:text-purple-600 hover:bg-gray-50'
-            }`}
-          >
-            <BookOpen className="w-5 h-5 sm:w-6 sm:h-6" />
-            <span className="text-[10px] sm:text-xs font-medium">Edukasi</span>
-          </button>
-
-          <button
-            onClick={() => navigate('/jadwal')}
-            className={`flex flex-col items-center gap-1 py-2 px-2 rounded-lg transition-colors ${
-              isActive('/jadwal') 
-                ? 'text-purple-600 bg-purple-50' 
-                : 'text-gray-500 hover:text-purple-600 hover:bg-gray-50'
-            }`}
-          >
-            <Calendar className="w-5 h-5 sm:w-6 sm:h-6" />
-            <span className="text-[10px] sm:text-xs font-medium">Jadwal</span>
-          </button>
-
-          <button
-            onClick={() => navigate('/profile')}
-            className={`flex flex-col items-center gap-1 py-2 px-2 rounded-lg transition-colors ${
-              isActive('/profile') 
-                ? 'text-purple-600 bg-purple-50' 
-                : 'text-gray-500 hover:text-purple-600 hover:bg-gray-50'
-            }`}
-          >
-            <User className="w-5 h-5 sm:w-6 sm:h-6" />
-            <span className="text-[10px] sm:text-xs font-medium">Profile</span>
-          </button>
+      {/* Bottom Navbar - Clean & Simple */}
+      <div className="bg-white border-t border-gray-100 fixed bottom-0 left-1/2 -translate-x-1/2 z-50 w-full max-w-xl">
+        <div className="flex justify-around items-center py-2">
+          {navItems.map(({ path, icon: Icon, label }) => {
+            const active = isActive(path);
+            return (
+              <button
+                key={path}
+                onClick={() => navigate(path)}
+                className={`
+                  flex flex-col items-center gap-1 py-1 px-4 rounded-xl transition-all duration-200
+                  ${active ? 'text-pink-500' : 'text-gray-400 hover:text-gray-600'}
+                `}
+              >
+                <Icon className={`w-5 h-5 transition-transform duration-200 ${active ? 'scale-105' : ''}`} />
+                <span className={`text-[10px] font-medium ${active ? 'font-semibold' : ''}`}>
+                  {label}
+                </span>
+                {active && (
+                  <div className="w-1 h-1 bg-pink-500 rounded-full -mt-0.5" />
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
     </>

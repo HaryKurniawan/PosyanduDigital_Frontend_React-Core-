@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import MobileNavbar from '../components/MobileNavbar';
+import SlidingTabs from '../components/SlidingTabs';
 import {
   Calendar,
-  Heart,
-  ChevronRight,
   MapPin,
   Clock,
   Users,
@@ -20,9 +19,6 @@ import {
 } from '../services/posyanduService';
 import { getFamilyData } from '../services/familyDataService';
 
-// JadwalPage.jsx
-// Full page for viewing schedules, registering children, and viewing history.
-
 const JadwalPage = () => {
   const [upcomingSchedules, setUpcomingSchedules] = useState([]);
   const [myRegistrations, setMyRegistrations] = useState([]);
@@ -31,28 +27,23 @@ const JadwalPage = () => {
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [myChildren, setMyChildren] = useState([]);
   const [selectedChild, setSelectedChild] = useState('');
-  const [activeTab, setActiveTab] = useState('upcoming'); // upcoming | registered | history
+  const [activeTab, setActiveTab] = useState('upcoming');
 
   useEffect(() => {
     fetchData();
   }, []);
 
-  // ------------------- Helpers: extraction & normalization -------------------
   const extractChildrenFromFamilyData = (familyData) => {
     if (!familyData) return [];
-    // common shapes: array, { children: [] }, { data: { children: [] } }, { family: { children: [] } }
     if (Array.isArray(familyData)) return familyData;
     if (Array.isArray(familyData.children)) return familyData.children;
     if (Array.isArray(familyData.data?.children)) return familyData.data.children;
     if (Array.isArray(familyData.family?.children)) return familyData.family.children;
-
-    // fallback: if there's any key that is an array of objects, return it
     for (const key of Object.keys(familyData)) {
       if (Array.isArray(familyData[key]) && familyData[key].length > 0 && typeof familyData[key][0] === 'object') {
         return familyData[key];
       }
     }
-
     return [];
   };
 
@@ -65,11 +56,9 @@ const JadwalPage = () => {
     };
   };
 
-  // ------------------- Fetch data -------------------
   const fetchData = async () => {
     try {
       setLoading(true);
-
       const [schedules, registrations, familyData] = await Promise.all([
         getUpcomingSchedules(),
         getMyRegistrations(),
@@ -79,13 +68,7 @@ const JadwalPage = () => {
       setUpcomingSchedules(schedules || []);
       setMyRegistrations(registrations || []);
 
-      // Debug prints to help map structure while developing
-      console.debug('JadwalPage.fetchData -> responses:', { schedules, registrations, familyData });
-
-      const childrenFromRegs = (registrations || [])
-        .map(r => r.child)
-        .filter(Boolean);
-
+      const childrenFromRegs = (registrations || []).map(r => r.child).filter(Boolean);
       const childrenFromFamily = extractChildrenFromFamilyData(familyData);
 
       const allChildren = [...childrenFromRegs, ...childrenFromFamily]
@@ -99,13 +82,11 @@ const JadwalPage = () => {
       setMyChildren(allChildren);
     } catch (error) {
       console.error('Error fetching data:', error);
-      alert('Gagal memuat data. Periksa koneksi atau coba lagi.');
     } finally {
       setLoading(false);
     }
   };
 
-  // ------------------- Actions -------------------
   const handleRegister = (schedule) => {
     setSelectedSchedule(schedule);
     setShowRegisterModal(true);
@@ -116,7 +97,6 @@ const JadwalPage = () => {
       alert('Pilih anak terlebih dahulu');
       return;
     }
-
     try {
       await registerForPosyandu({
         scheduleId: selectedSchedule.id,
@@ -128,40 +108,28 @@ const JadwalPage = () => {
       fetchData();
       setActiveTab('registered');
     } catch (error) {
-      console.error('Error registering:', error);
       alert(error?.response?.data?.message || 'Gagal mendaftar');
     }
   };
 
   const handleCancelRegistration = async (registrationId) => {
     if (!window.confirm('Yakin ingin membatalkan pendaftaran?')) return;
-
     try {
       await cancelRegistration(registrationId);
       alert('Pendaftaran dibatalkan');
       fetchData();
     } catch (error) {
-      console.error('Error cancelling:', error);
       alert('Gagal membatalkan pendaftaran');
     }
   };
 
-  // ------------------- Formatters & utils -------------------
   const formatDate = (dateString) => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('id-ID', {
-      weekday: 'long',
+      weekday: 'short',
       day: 'numeric',
-      month: 'long',
+      month: 'short',
       year: 'numeric'
-    });
-  };
-
-  const formatTime = (dateString) => {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleTimeString('id-ID', {
-      hour: '2-digit',
-      minute: '2-digit'
     });
   };
 
@@ -172,78 +140,34 @@ const JadwalPage = () => {
   const activeRegistrations = myRegistrations.filter(r => r.status === 'REGISTERED');
   const historyRegistrations = myRegistrations.filter(r => r.status === 'ATTENDED' || r.status === 'CANCELLED');
 
-  // ------------------- Render -------------------
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-orange-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Memuat data...</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-pink-500 mx-auto"></div>
+          <p className="mt-3 text-gray-400 text-sm">Memuat data...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-orange-50">
+    <div className="min-h-screen bg-white">
       <MobileNavbar />
 
-      <div className="pt-20 pb-24 px-4">
-        {/* Header */}
-        <div className="mb-4">
-          <h1 className="text-2xl font-bold text-gray-800 mb-1">Jadwal Posyandu</h1>
-          <p className="text-sm text-gray-600">Lihat dan daftar jadwal posyandu</p>
-        </div>
+      <div className="pt-16 pb-20 px-4">
 
-        {/* Tabs */}
-        <div className="bg-white rounded-2xl p-2 shadow-sm mb-4">
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              onClick={() => setActiveTab('upcoming')}
-              className={`py-3 rounded-xl font-semibold text-sm transition ${
-                activeTab === 'upcoming'
-                  ? 'bg-purple-600 text-white shadow-md'
-                  : 'bg-transparent text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <Calendar className="w-4 h-4 inline mb-1" />
-              <div className="text-xs mt-1">Mendatang</div>
-              {upcomingSchedules.length > 0 && (
-                <div className="text-xs mt-0.5 opacity-80">({upcomingSchedules.length})</div>
-              )}
-            </button>
 
-            <button
-              onClick={() => setActiveTab('registered')}
-              className={`py-3 rounded-xl font-semibold text-sm transition ${
-                activeTab === 'registered'
-                  ? 'bg-purple-600 text-white shadow-md'
-                  : 'bg-transparent text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <CheckCircle className="w-4 h-4 inline mb-1" />
-              <div className="text-xs mt-1">Terdaftar</div>
-              {activeRegistrations.length > 0 && (
-                <div className="text-xs mt-0.5 opacity-80">({activeRegistrations.length})</div>
-              )}
-            </button>
-
-            <button
-              onClick={() => setActiveTab('history')}
-              className={`py-3 rounded-xl font-semibold text-sm transition ${
-                activeTab === 'history'
-                  ? 'bg-purple-600 text-white shadow-md'
-                  : 'bg-transparent text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <History className="w-4 h-4 inline mb-1" />
-              <div className="text-xs mt-1">Riwayat</div>
-              {historyRegistrations.length > 0 && (
-                <div className="text-xs mt-0.5 opacity-80">({historyRegistrations.length})</div>
-              )}
-            </button>
-          </div>
-        </div>
+        {/* Tabs with Sliding Indicator */}
+        <SlidingTabs
+          tabs={[
+            { id: 'upcoming', label: 'Mendatang', icon: <Calendar className="w-3.5 h-3.5" /> },
+            { id: 'registered', label: 'Terdaftar', icon: <CheckCircle className="w-3.5 h-3.5" /> },
+            { id: 'history', label: 'Riwayat', icon: <History className="w-3.5 h-3.5" /> }
+          ]}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
 
         {/* Content */}
         <div className="space-y-3">
@@ -251,9 +175,9 @@ const JadwalPage = () => {
           {activeTab === 'upcoming' && (
             <div>
               {upcomingSchedules.length === 0 ? (
-                <div className="bg-white rounded-2xl p-8 text-center shadow-sm">
-                  <Calendar className="w-16 h-16 mx-auto mb-3 text-gray-300" />
-                  <p className="text-gray-500">Belum ada jadwal mendatang</p>
+                <div className="bg-gray-50 rounded-xl p-8 text-center border border-gray-100">
+                  <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-200" />
+                  <p className="text-gray-400 text-sm">Belum ada jadwal mendatang</p>
                 </div>
               ) : (
                 upcomingSchedules.map((schedule) => {
@@ -261,38 +185,36 @@ const JadwalPage = () => {
                   const scheduleDate = schedule.scheduleDate ?? schedule.date ?? schedule.datetime;
 
                   return (
-                    <div key={schedule.id} className="bg-white rounded-2xl p-4 shadow-sm hover:shadow-md transition">
+                    <div key={schedule.id} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                       <div className="flex items-start gap-3 mb-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center flex-shrink-0">
-                          <Calendar className="w-6 h-6 text-purple-600" />
+                        <div className="w-10 h-10 bg-pink-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                          <Calendar className="w-5 h-5 text-pink-500" />
                         </div>
                         <div className="flex-1">
-                          <p className="font-bold text-gray-800 text-lg">{schedule.location}</p>
-                          <div className="flex items-center gap-1 text-sm text-gray-600 mt-1">
-                            <Clock className="w-4 h-4" />
+                          <p className="font-semibold text-gray-800 text-sm">{schedule.location}</p>
+                          <div className="flex items-center gap-1 text-[10px] text-gray-500 mt-0.5">
+                            <Clock className="w-3 h-3" />
                             {formatDate(scheduleDate)} {schedule.startTime ? `, ${schedule.startTime}` : ''}
                           </div>
-
                           {schedule.description && (
-                            <p className="text-sm text-gray-500 mt-2 bg-gray-50 rounded-lg p-2">{schedule.description}</p>
+                            <p className="text-[10px] text-gray-400 mt-1">{schedule.description}</p>
                           )}
-
-                          <div className="flex items-center gap-1 text-xs text-gray-500 mt-2">
+                          <div className="flex items-center gap-1 text-[10px] text-gray-400 mt-1">
                             <Users className="w-3 h-3" />
-                            {(schedule._count?.registrations ?? schedule.registeredCount ?? 0)} orang terdaftar
+                            {(schedule._count?.registrations ?? schedule.registeredCount ?? 0)} terdaftar
                           </div>
                         </div>
                       </div>
 
                       {registered ? (
-                        <div className="flex items-center justify-center gap-2 py-2 bg-green-100 text-green-700 rounded-xl text-sm font-semibold">
-                          <CheckCircle className="w-4 h-4" />
+                        <div className="flex items-center justify-center gap-1 py-2 bg-green-100 text-green-700 rounded-lg text-xs font-medium">
+                          <CheckCircle className="w-3.5 h-3.5" />
                           Sudah Terdaftar
                         </div>
                       ) : (
                         <button
                           onClick={() => handleRegister(schedule)}
-                          className="w-full py-3 bg-purple-600 text-white rounded-xl text-sm font-semibold hover:bg-purple-700 transition"
+                          className="w-full py-2.5 bg-pink-500 text-white rounded-lg text-xs font-semibold hover:bg-pink-600 transition"
                         >
                           Daftar Sekarang
                         </button>
@@ -308,54 +230,48 @@ const JadwalPage = () => {
           {activeTab === 'registered' && (
             <div>
               {activeRegistrations.length === 0 ? (
-                <div className="bg-white rounded-2xl p-8 text-center shadow-sm">
-                  <CheckCircle className="w-16 h-16 mx-auto mb-3 text-gray-300" />
-                  <p className="text-gray-500">Belum ada pendaftaran aktif</p>
+                <div className="bg-gray-50 rounded-xl p-8 text-center border border-gray-100">
+                  <CheckCircle className="w-12 h-12 mx-auto mb-3 text-gray-200" />
+                  <p className="text-gray-400 text-sm">Belum ada pendaftaran aktif</p>
                   <button
                     onClick={() => setActiveTab('upcoming')}
-                    className="mt-4 px-6 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition text-sm font-semibold"
+                    className="mt-3 px-4 py-2 bg-pink-500 text-white rounded-lg text-xs font-medium"
                   >
                     Lihat Jadwal
                   </button>
                 </div>
               ) : (
                 activeRegistrations.map((registration) => (
-                  <div key={registration.id} className="bg-white rounded-2xl p-4 shadow-sm">
-                    <div className="flex items-start gap-4 mb-3">
-                      <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <User className="w-6 h-6 text-green-600" />
+                  <div key={registration.id} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <User className="w-5 h-5 text-green-600" />
                       </div>
                       <div className="flex-1">
-                        <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-start justify-between">
                           <div>
-                            <p className="font-bold text-gray-800 text-lg">{registration.child?.fullName ?? registration.child?.name ?? '-'}</p>
-                            <p className="text-xs text-gray-500">NIK: {registration.child?.nik ?? '-'}</p>
+                            <p className="font-semibold text-gray-800 text-sm">{registration.child?.fullName ?? '-'}</p>
+                            <p className="text-[10px] text-gray-400">NIK: {registration.child?.nik ?? '-'}</p>
                           </div>
-                          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">Terdaftar</span>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-100 text-blue-600">Terdaftar</span>
                         </div>
 
-                        <div className="bg-purple-50 rounded-xl p-3 mt-2">
-                          <div className="flex items-center gap-2 mb-1">
-                            <MapPin className="w-4 h-4 text-purple-600" />
-                            <p className="text-sm font-semibold text-gray-800">{registration.schedule?.location ?? '-'}</p>
+                        <div className="bg-white rounded-lg p-2 mt-2 border border-gray-100">
+                          <div className="flex items-center gap-1 text-[10px] text-gray-600">
+                            <MapPin className="w-3 h-3 text-pink-500" />
+                            <span className="font-medium">{registration.schedule?.location ?? '-'}</span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Clock className="w-4 h-4 text-purple-600" />
-                            <p className="text-xs text-gray-600">{formatDate(registration.schedule?.scheduleDate ?? registration.schedule?.date)}</p>
+                          <div className="flex items-center gap-1 text-[10px] text-gray-400 mt-0.5">
+                            <Clock className="w-3 h-3" />
+                            {formatDate(registration.schedule?.scheduleDate ?? registration.schedule?.date)}
                           </div>
                         </div>
-
-                        {registration.notes && (
-                          <div className="mt-2 bg-blue-50 border border-blue-200 rounded-lg p-2">
-                            <p className="text-xs text-blue-800"><span className="font-semibold">Catatan:</span> {registration.notes}</p>
-                          </div>
-                        )}
                       </div>
                     </div>
 
                     <button
                       onClick={() => handleCancelRegistration(registration.id)}
-                      className="w-full py-2 bg-red-100 text-red-700 rounded-xl text-sm font-semibold hover:bg-red-200 transition"
+                      className="w-full py-2 bg-red-50 text-red-600 rounded-lg text-xs font-medium hover:bg-red-100 transition"
                     >
                       Batalkan Pendaftaran
                     </button>
@@ -369,49 +285,42 @@ const JadwalPage = () => {
           {activeTab === 'history' && (
             <div>
               {historyRegistrations.length === 0 ? (
-                <div className="bg-white rounded-2xl p-8 text-center shadow-sm">
-                  <History className="w-16 h-16 mx-auto mb-3 text-gray-300" />
-                  <p className="text-gray-500">Belum ada riwayat pendaftaran</p>
+                <div className="bg-gray-50 rounded-xl p-8 text-center border border-gray-100">
+                  <History className="w-12 h-12 mx-auto mb-3 text-gray-200" />
+                  <p className="text-gray-400 text-sm">Belum ada riwayat</p>
                 </div>
               ) : (
                 historyRegistrations.map((registration) => (
-                  <div key={registration.id} className="bg-white rounded-2xl p-4 shadow-sm">
-                    <div className="flex items-start gap-4">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${registration.status === 'ATTENDED' ? 'bg-gradient-to-br from-green-100 to-emerald-100' : 'bg-gradient-to-br from-gray-100 to-gray-200'}`}>
+                  <div key={registration.id} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                    <div className="flex items-start gap-3">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${registration.status === 'ATTENDED' ? 'bg-green-100' : 'bg-gray-100'}`}>
                         {registration.status === 'ATTENDED' ? (
-                          <CheckCircle className="w-6 h-6 text-green-600" />
+                          <CheckCircle className="w-5 h-5 text-green-600" />
                         ) : (
-                          <XCircle className="w-6 h-6 text-gray-600" />
+                          <XCircle className="w-5 h-5 text-gray-400" />
                         )}
                       </div>
-
                       <div className="flex-1">
-                        <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-start justify-between">
                           <div>
-                            <p className="font-bold text-gray-800 text-lg">{registration.child?.fullName ?? registration.child?.name ?? '-'}</p>
-                            <p className="text-xs text-gray-500">NIK: {registration.child?.nik ?? '-'}</p>
+                            <p className="font-semibold text-gray-800 text-sm">{registration.child?.fullName ?? '-'}</p>
+                            <p className="text-[10px] text-gray-400">NIK: {registration.child?.nik ?? '-'}</p>
                           </div>
-                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${registration.status === 'ATTENDED' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${registration.status === 'ATTENDED' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
                             {registration.status === 'ATTENDED' ? 'Hadir' : 'Dibatalkan'}
                           </span>
                         </div>
 
-                        <div className="bg-gray-50 rounded-xl p-3 mt-2">
-                          <div className="flex items-center gap-2 mb-1">
-                            <MapPin className="w-4 h-4 text-gray-600" />
-                            <p className="text-sm font-semibold text-gray-800">{registration.schedule?.location ?? '-'}</p>
+                        <div className="bg-white rounded-lg p-2 mt-2 border border-gray-100">
+                          <div className="flex items-center gap-1 text-[10px] text-gray-600">
+                            <MapPin className="w-3 h-3" />
+                            {registration.schedule?.location ?? '-'}
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Clock className="w-4 h-4 text-gray-600" />
-                            <p className="text-xs text-gray-600">{formatDate(registration.schedule?.scheduleDate ?? registration.schedule?.date)}</p>
+                          <div className="flex items-center gap-1 text-[10px] text-gray-400 mt-0.5">
+                            <Clock className="w-3 h-3" />
+                            {formatDate(registration.schedule?.scheduleDate ?? registration.schedule?.date)}
                           </div>
                         </div>
-
-                        {registration.notes && (
-                          <div className="mt-2 bg-blue-50 border border-blue-200 rounded-lg p-2">
-                            <p className="text-xs text-blue-800"><span className="font-semibold">Catatan:</span> {registration.notes}</p>
-                          </div>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -425,24 +334,19 @@ const JadwalPage = () => {
       {/* Registration Modal */}
       {showRegisterModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
-            <h3 className="text-xl font-bold text-gray-800 mb-2">Daftar Posyandu</h3>
-            <p className="text-sm text-gray-600 mb-4">{selectedSchedule?.location} - {formatDate(selectedSchedule?.scheduleDate ?? selectedSchedule?.date ?? selectedSchedule?.datetime)}</p>
+          <div className="bg-white rounded-2xl p-5 max-w-xs w-full">
+            <h3 className="text-base font-bold text-gray-800 mb-1">Daftar Posyandu</h3>
+            <p className="text-xs text-gray-500 mb-4">{selectedSchedule?.location} - {formatDate(selectedSchedule?.scheduleDate ?? selectedSchedule?.date)}</p>
 
             <div className="mb-4">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Pilih Anak</label>
-
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">Pilih Anak</label>
               {myChildren.length === 0 && (
-                <div className="mb-3">
-                  <p className="text-xs text-red-600 mb-2">Belum ada data anak. Silakan lengkapi profil keluarga terlebih dahulu.</p>
-                  <a href="/profile/family" className="inline-block px-4 py-2 bg-purple-600 text-white rounded-xl text-sm font-semibold">Lengkapi Profil</a>
-                </div>
+                <p className="text-xs text-red-500 mb-2">Belum ada data anak. Silakan lengkapi profil keluarga.</p>
               )}
-
               <select
                 value={selectedChild}
                 onChange={(e) => setSelectedChild(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-3 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500"
               >
                 <option value="">-- Pilih Anak --</option>
                 {myChildren.map((child) => (
@@ -451,20 +355,20 @@ const JadwalPage = () => {
               </select>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <button
                 onClick={() => {
                   setShowRegisterModal(false);
                   setSelectedChild('');
                 }}
-                className="flex-1 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition font-semibold"
+                className="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-medium"
               >
                 Batal
               </button>
               <button
                 onClick={submitRegistration}
                 disabled={!selectedChild}
-                className="flex-1 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="flex-1 py-2.5 bg-pink-500 text-white rounded-xl text-sm font-medium disabled:bg-gray-200 disabled:text-gray-400"
               >
                 Daftar
               </button>

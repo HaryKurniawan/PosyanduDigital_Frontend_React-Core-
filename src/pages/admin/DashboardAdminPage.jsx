@@ -23,7 +23,7 @@ const DashboardAdminPage = () => {
     try {
       setLoading(true);
       const childrenData = await getAllChildren();
-      
+
       // Fetch KPSP statistics
       let kpspStats = { totalScreenings: 0 };
       try {
@@ -86,6 +86,15 @@ const DashboardAdminPage = () => {
       bgColor: 'from-orange-50 to-orange-100',
       iconColor: 'text-orange-600',
       path: '/admin/kelola-kpsp'
+    },
+    {
+      title: 'Perubahan Data',
+      description: 'Approve perubahan data keluarga',
+      icon: FileText,
+      color: 'from-teal-500 to-teal-600',
+      bgColor: 'from-teal-50 to-teal-100',
+      iconColor: 'text-teal-600',
+      path: '/admin/kelola-perubahan-data'
     },
     {
       title: 'Laporan',
@@ -224,7 +233,7 @@ const DashboardAdminPage = () => {
                     {item.description}
                   </p>
                 </div>
-                
+
                 <div className={`bg-gradient-to-r ${item.color} p-4`}>
                   <div className="flex items-center justify-between text-white">
                     <span className="font-semibold text-sm">Buka Menu</span>
@@ -263,7 +272,7 @@ const DashboardAdminPage = () => {
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-start gap-3 p-4 bg-purple-50 rounded-xl">
               <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
                 <span className="text-xl">👶</span>

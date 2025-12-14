@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, CheckCircle2, Clock, AlertCircle, Loader, Syringe, Calendar } from 'lucide-react';
-import MobileNavbar from '../components/MobileNavbar';
+import { CheckCircle2, Clock, AlertCircle, Loader, Syringe, Calendar } from 'lucide-react';
+import PageHeader from '../components/PageHeader';
 import {
   getChildImmunizationRoadmap,
   getChildImmunizations
@@ -13,8 +13,8 @@ import { getFamilyData } from '../services/familyDataService';
 const StatusBadge = ({ status }) => {
   const statusConfig = {
     COMPLETED: {
-      bg: 'bg-green-100',
-      text: 'text-green-800',
+      bg: 'bg-pink-100',
+      text: 'text-pink-700',
       label: 'Sudah',
       icon: '✓'
     },
@@ -37,8 +37,8 @@ const StatusBadge = ({ status }) => {
       icon: '⏸'
     },
     completed: {
-      bg: 'bg-green-100',
-      text: 'text-green-800',
+      bg: 'bg-pink-100',
+      text: 'text-pink-700',
       label: 'Sudah',
       icon: '✓'
     },
@@ -141,22 +141,12 @@ const ImunisasiListPage = ({ onSelectVaccine, onBack }) => {
 
   return (
     <div className="min-h-screen bg-white pb-24">
-      <MobileNavbar />
+      <PageHeader title="Roadmap Imunisasi" onBack={onBack} />
 
-      <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-4 flex items-center gap-3 mt-16">
-        <button onClick={onBack} className="p-1 hover:bg-green-700 rounded">
-          <ChevronLeft size={24} />
-        </button>
-        <div className="flex-1">
-          <h1 className="text-xl font-bold">Roadmap Imunisasi</h1>
-          <p className="text-sm text-green-100">Pantau jadwal vaksinasi anak</p>
-        </div>
-      </div>
-
-      <div className="p-4">
+      <div className="px-4 py-4">
         {loading && !roadmapData ? (
           <div className="flex justify-center items-center py-12">
-            <Loader className="animate-spin text-green-600" size={40} />
+            <Loader className="animate-spin text-pink-500" size={40} />
           </div>
         ) : error ? (
           <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
@@ -173,11 +163,10 @@ const ImunisasiListPage = ({ onSelectVaccine, onBack }) => {
                     <button
                       key={child.id}
                       onClick={() => setSelectedChildId(child.id)}
-                      className={`flex-shrink-0 px-4 py-2 rounded-full font-semibold transition whitespace-nowrap ${
-                        selectedChildId === child.id
-                          ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white'
-                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                      }`}
+                      className={`flex-shrink-0 px-4 py-2 rounded-full font-semibold transition whitespace-nowrap ${selectedChildId === child.id
+                        ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white'
+                        : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                        }`}
                     >
                       {child.fullName}
                     </button>
@@ -187,7 +176,7 @@ const ImunisasiListPage = ({ onSelectVaccine, onBack }) => {
             )}
 
             {currentChild && roadmapData && (
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-4 mb-6">
+              <div className="bg-gradient-to-r from-pink-50 to-rose-50 border-2 border-pink-200 rounded-2xl p-4 mb-6">
                 <h2 className="font-bold text-gray-800 text-lg mb-1">
                   {currentChild.fullName}
                 </h2>
@@ -198,12 +187,12 @@ const ImunisasiListPage = ({ onSelectVaccine, onBack }) => {
                   <div className="flex-1">
                     <div className="w-full bg-gray-200 rounded-full h-3">
                       <div
-                        className="bg-gradient-to-r from-green-600 to-emerald-600 h-3 rounded-full transition-all"
+                        className="bg-gradient-to-r from-pink-500 to-rose-500 h-3 rounded-full transition-all"
                         style={{ width: `${progressPercentage}%` }}
                       ></div>
                     </div>
                   </div>
-                  <span className="text-sm font-bold text-green-600">
+                  <span className="text-sm font-bold text-pink-500">
                     {roadmapData.progress.completed}/{roadmapData.progress.total}
                   </span>
                 </div>
@@ -219,7 +208,7 @@ const ImunisasiListPage = ({ onSelectVaccine, onBack }) => {
 
                 <div className="space-y-4">
                   {roadmapData.roadmap.map((schedule, scheduleIdx) => (
-                    <div key={scheduleIdx} className="border-l-4 border-green-300 pl-4">
+                    <div key={scheduleIdx} className="border-l-4 border-pink-300 pl-4">
                       <h4 className="font-semibold text-gray-800 mb-3">
                         {schedule.ageRange}
                       </h4>
@@ -229,7 +218,7 @@ const ImunisasiListPage = ({ onSelectVaccine, onBack }) => {
                           <button
                             key={vaccine.id}
                             onClick={() => onSelectVaccine(vaccine, currentChild)}
-                            className="w-full bg-white border-2 border-gray-200 rounded-lg p-3 hover:border-green-400 hover:shadow-md transition text-left"
+                            className="w-full bg-white border-2 border-gray-200 rounded-lg p-3 hover:border-pink-400 hover:shadow-md transition text-left"
                           >
                             <div className="flex items-start justify-between gap-3">
                               <div className="flex-1">
@@ -249,7 +238,7 @@ const ImunisasiListPage = ({ onSelectVaccine, onBack }) => {
                                 </div>
                                 {/* ✅ NEW - Show vaccination date if completed */}
                                 {vaccine.status === 'completed' && vaccine.vaccinationDate && (
-                                  <div className="flex items-center gap-1 mt-2 text-xs text-green-700">
+                                  <div className="flex items-center gap-1 mt-2 text-xs text-pink-600">
                                     <Syringe size={14} />
                                     <span>
                                       Diberikan: {new Date(vaccine.vaccinationDate).toLocaleDateString('id-ID', {
@@ -280,7 +269,7 @@ const ImunisasiListPage = ({ onSelectVaccine, onBack }) => {
               </p>
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2 text-xs text-blue-800">
-                  <div className="w-3 h-3 bg-green-100 border border-green-400 rounded-full"></div>
+                  <div className="w-3 h-3 bg-pink-100 border border-pink-400 rounded-full"></div>
                   <span>Sudah diberikan</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-blue-800">
@@ -306,20 +295,11 @@ const ImunisasiListPage = ({ onSelectVaccine, onBack }) => {
 const ImunisasiDetailPage = ({ vaccine, child, onBack }) => {
   return (
     <div className="min-h-screen bg-white pb-24">
-      <MobileNavbar />
+      <PageHeader title="Detail Imunisasi" onBack={onBack} />
 
-      <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-4 flex items-center gap-3 mt-16">
-        <button onClick={onBack} className="p-1 hover:bg-green-700 rounded">
-          <ChevronLeft size={24} />
-        </button>
-        <div className="flex-1">
-          <h1 className="text-xl font-bold">Detail Imunisasi</h1>
-        </div>
-      </div>
-
-      <div className="p-4">
+      <div className="px-4 py-4">
         {/* Child Data */}
-        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-4 mb-6">
+        <div className="bg-gradient-to-r from-pink-50 to-rose-50 border-2 border-pink-200 rounded-2xl p-4 mb-6">
           <p className="text-sm text-gray-600 mb-1">Data Anak</p>
           <h2 className="font-bold text-gray-800 text-lg">{child.fullName}</h2>
           <p className="text-sm text-gray-600">NIK: {child.nik || '-'}</p>
@@ -327,17 +307,16 @@ const ImunisasiDetailPage = ({ vaccine, child, onBack }) => {
 
         {/* Status Card */}
         <div
-          className={`rounded-2xl p-6 mb-6 text-center ${
-            vaccine.status === 'completed'
-              ? 'bg-green-50 border-2 border-green-200'
-              : vaccine.status === 'pending'
+          className={`rounded-2xl p-6 mb-6 text-center ${vaccine.status === 'completed'
+            ? 'bg-pink-50 border-2 border-pink-200'
+            : vaccine.status === 'pending'
               ? 'bg-yellow-50 border-2 border-yellow-200'
               : 'bg-gray-50 border-2 border-gray-200'
-          }`}
+            }`}
         >
           <div className="flex justify-center mb-4">
             {vaccine.status === 'completed' && (
-              <CheckCircle2 size={48} className="text-green-600" />
+              <CheckCircle2 size={48} className="text-pink-500" />
             )}
             {vaccine.status === 'pending' && (
               <Clock size={48} className="text-yellow-600" />
@@ -376,12 +355,12 @@ const ImunisasiDetailPage = ({ vaccine, child, onBack }) => {
 
             {/* ✅ NEW - Enhanced vaccination date display */}
             {vaccine.vaccinationDate && (
-              <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 mt-4">
+              <div className="bg-pink-50 border-2 border-pink-200 rounded-lg p-4 mt-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Calendar className="text-green-600" size={20} />
-                  <p className="font-semibold text-green-900">Tanggal Pemberian</p>
+                  <Calendar className="text-pink-500" size={20} />
+                  <p className="font-semibold text-pink-800">Tanggal Pemberian</p>
                 </div>
-                <p className="text-lg font-bold text-green-800">
+                <p className="text-lg font-bold text-pink-700">
                   {new Date(vaccine.vaccinationDate).toLocaleDateString('id-ID', {
                     weekday: 'long',
                     year: 'numeric',
@@ -390,7 +369,7 @@ const ImunisasiDetailPage = ({ vaccine, child, onBack }) => {
                   })}
                 </p>
                 {vaccine.notes && (
-                  <div className="mt-3 pt-3 border-t border-green-200">
+                  <div className="mt-3 pt-3 border-t border-pink-200">
                     <p className="text-xs text-gray-600 mb-1">Catatan:</p>
                     <p className="text-sm text-gray-800">{vaccine.notes}</p>
                   </div>
@@ -402,35 +381,32 @@ const ImunisasiDetailPage = ({ vaccine, child, onBack }) => {
 
         {/* Recommendation */}
         <div
-          className={`rounded-2xl p-4 mb-6 ${
-            vaccine.status === 'completed'
-              ? 'bg-green-50 border-l-4 border-green-500'
-              : vaccine.status === 'pending'
+          className={`rounded-2xl p-4 mb-6 ${vaccine.status === 'completed'
+            ? 'bg-pink-50 border-l-4 border-pink-500'
+            : vaccine.status === 'pending'
               ? 'bg-yellow-50 border-l-4 border-yellow-500'
               : 'bg-blue-50 border-l-4 border-blue-500'
-          }`}
+            }`}
         >
           <h4
-            className={`font-semibold mb-2 ${
-              vaccine.status === 'completed'
-                ? 'text-green-900'
-                : vaccine.status === 'pending'
+            className={`font-semibold mb-2 ${vaccine.status === 'completed'
+              ? 'text-pink-800'
+              : vaccine.status === 'pending'
                 ? 'text-yellow-900'
                 : 'text-blue-900'
-            }`}
+              }`}
           >
             {vaccine.status === 'completed' && '✓ Vaksin Sudah Diberikan'}
             {vaccine.status === 'pending' && '⏰ Jadwalkan Vaksin'}
             {vaccine.status !== 'completed' && vaccine.status !== 'pending' && 'ℹ Info'}
           </h4>
           <p
-            className={`text-sm ${
-              vaccine.status === 'completed'
-                ? 'text-green-800'
-                : vaccine.status === 'pending'
+            className={`text-sm ${vaccine.status === 'completed'
+              ? 'text-pink-700'
+              : vaccine.status === 'pending'
                 ? 'text-yellow-800'
                 : 'text-blue-800'
-            }`}
+              }`}
           >
             {vaccine.status === 'completed' &&
               'Vaksin ini sudah diberikan saat pemeriksaan di Posyandu. Pantau jadwal vaksin berikutnya.'}
@@ -462,7 +438,7 @@ const ImunisasiDetailPage = ({ vaccine, child, onBack }) => {
               <span>Hubungi petugas kesehatan jika ada keluhan serius</span>
             </li>
             {vaccine.status === 'completed' && (
-              <li className="flex gap-2 mt-4 text-green-700 font-semibold">
+              <li className="flex gap-2 mt-4 text-pink-600 font-semibold">
                 <span>✓</span>
                 <span>Vaksin ini sudah tercatat dalam riwayat kesehatan anak</span>
               </li>

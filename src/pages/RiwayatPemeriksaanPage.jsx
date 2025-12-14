@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, User, Activity, ChevronLeft, Syringe, TrendingUp, Baby } from 'lucide-react';
+import { Calendar, User, Activity, Syringe, TrendingUp, Baby } from 'lucide-react';
 import { getMyChildrenExaminations } from '../services/posyanduService';
+import PageHeader from '../components/PageHeader';
 
 const RiwayatPemeriksaanPage = () => {
   const navigate = useNavigate();
@@ -43,7 +44,7 @@ const RiwayatPemeriksaanPage = () => {
     const today = new Date();
     const years = today.getFullYear() - birth.getFullYear();
     const months = today.getMonth() - birth.getMonth();
-    
+
     if (years === 0) {
       return `${months} bulan`;
     } else if (months < 0) {
@@ -77,8 +78,8 @@ const RiwayatPemeriksaanPage = () => {
     return Object.values(latestExams);
   };
 
-  const filteredExaminations = selectedChild === 'all' 
-    ? examinations 
+  const filteredExaminations = selectedChild === 'all'
+    ? examinations
     : examinations.filter(exam => exam.child.nik === selectedChild);
 
   const immunizationHistory = filteredExaminations
@@ -89,10 +90,10 @@ const RiwayatPemeriksaanPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Memuat data...</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-pink-500 mx-auto"></div>
+          <p className="mt-3 text-gray-400 text-sm">Memuat data...</p>
         </div>
       </div>
     );
@@ -100,14 +101,14 @@ const RiwayatPemeriksaanPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-lg p-6 max-w-md w-full text-center">
-          <Activity className="w-16 h-16 text-red-400 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-gray-800 mb-2">Terjadi Kesalahan</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
+      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+        <div className="bg-gray-50 rounded-2xl p-6 max-w-md w-full text-center border border-gray-100">
+          <Activity className="w-12 h-12 text-red-400 mx-auto mb-4" />
+          <h2 className="text-lg font-bold text-gray-800 mb-2">Terjadi Kesalahan</h2>
+          <p className="text-sm text-gray-600 mb-4">{error}</p>
           <button
             onClick={fetchExaminations}
-            className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+            className="px-6 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition text-sm"
           >
             Coba Lagi
           </button>
@@ -117,24 +118,10 @@ const RiwayatPemeriksaanPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 pb-6">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-6 rounded-b-3xl shadow-lg">
-        <div className="flex items-center gap-3 mb-4">
-          <button
-            onClick={() => navigate('/home')}
-            className="p-2 hover:bg-white/20 rounded-full transition"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold">Riwayat Kesehatan</h1>
-            <p className="text-sm text-white/80 mt-1">Data pemeriksaan dan imunisasi anak</p>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-white pb-6">
+      <PageHeader title="Riwayat Kesehatan" backTo="/home" />
 
-      <div className="p-4">
+      <div className="px-4 py-4">
         {examinations.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-sm p-8 text-center">
             <Activity className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -251,11 +238,10 @@ const RiwayatPemeriksaanPage = () => {
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => setActiveTab('immunizations')}
-                  className={`py-3 rounded-xl font-semibold text-sm transition ${
-                    activeTab === 'immunizations'
+                  className={`py-3 rounded-xl font-semibold text-sm transition ${activeTab === 'immunizations'
                       ? 'bg-purple-600 text-white shadow-md'
                       : 'bg-transparent text-gray-600 hover:bg-gray-100'
-                  }`}
+                    }`}
                 >
                   <Syringe className="w-4 h-4 inline mb-1" />
                   <div className="text-xs mt-1">Riwayat Imunisasi</div>
@@ -264,11 +250,10 @@ const RiwayatPemeriksaanPage = () => {
 
                 <button
                   onClick={() => setActiveTab('examinations')}
-                  className={`py-3 rounded-xl font-semibold text-sm transition ${
-                    activeTab === 'examinations'
+                  className={`py-3 rounded-xl font-semibold text-sm transition ${activeTab === 'examinations'
                       ? 'bg-purple-600 text-white shadow-md'
                       : 'bg-transparent text-gray-600 hover:bg-gray-100'
-                  }`}
+                    }`}
                 >
                   <TrendingUp className="w-4 h-4 inline mb-1" />
                   <div className="text-xs mt-1">Riwayat Pemeriksaan</div>
@@ -304,7 +289,7 @@ const RiwayatPemeriksaanPage = () => {
                                 <p className="text-sm text-gray-600">{exam.child.fullName}</p>
                               </div>
                             </div>
-                            
+
                             <div className="bg-gray-50 rounded-xl p-3 space-y-2">
                               <div className="flex items-center gap-2 text-sm text-gray-600">
                                 <Calendar className="w-4 h-4 text-gray-500" />

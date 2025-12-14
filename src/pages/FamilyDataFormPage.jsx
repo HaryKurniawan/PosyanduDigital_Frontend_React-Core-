@@ -45,6 +45,7 @@ const FamilyDataFormPage = () => {
       birthCertificate: '',
       childOrder: 1,
       bloodType: '',
+      gender: 'L', // Default Laki-laki
       birthPlace: '',
       birthDate: ''
     }
@@ -57,7 +58,7 @@ const FamilyDataFormPage = () => {
   const loadExistingData = async () => {
     try {
       const data = await getFamilyData();
-      
+
       if (data.motherData) {
         setMotherData({
           fullName: data.motherData.fullName || '',
@@ -89,6 +90,7 @@ const FamilyDataFormPage = () => {
           birthCertificate: child.birthCertificate || '',
           childOrder: child.childOrder || 1,
           bloodType: child.bloodType || '',
+          gender: child.gender || 'L',
           birthPlace: child.birthPlace || '',
           birthDate: child.birthDate ? child.birthDate.split('T')[0] : ''
         })));
@@ -185,6 +187,7 @@ const FamilyDataFormPage = () => {
         birthCertificate: '',
         childOrder: childrenData.length + 1,
         bloodType: '',
+        gender: 'L',
         birthPlace: '',
         birthDate: ''
       }
@@ -215,7 +218,7 @@ const FamilyDataFormPage = () => {
       await saveSpouseData(spouseData);
       await saveChildData({ children: childrenData });
       await completeProfile();
-      
+
       alert('Data berhasil disimpan!');
       navigate('/home');
     } catch (error) {
@@ -249,31 +252,28 @@ const FamilyDataFormPage = () => {
           <div className="flex border-b">
             <button
               onClick={() => handleTabChange('ibu')}
-              className={`flex-1 py-4 px-6 font-medium transition ${
-                activeTab === 'ibu'
-                  ? 'bg-purple-100 text-purple-700 border-b-2 border-purple-600'
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
+              className={`flex-1 py-4 px-6 font-medium transition ${activeTab === 'ibu'
+                ? 'bg-purple-100 text-purple-700 border-b-2 border-purple-600'
+                : 'text-gray-600 hover:bg-gray-50'
+                }`}
             >
               Ibu
             </button>
             <button
               onClick={() => handleTabChange('suami')}
-              className={`flex-1 py-4 px-6 font-medium transition ${
-                activeTab === 'suami'
-                  ? 'bg-purple-100 text-purple-700 border-b-2 border-purple-600'
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
+              className={`flex-1 py-4 px-6 font-medium transition ${activeTab === 'suami'
+                ? 'bg-purple-100 text-purple-700 border-b-2 border-purple-600'
+                : 'text-gray-600 hover:bg-gray-50'
+                }`}
             >
               Suami/Keluarga
             </button>
             <button
               onClick={() => handleTabChange('anak')}
-              className={`flex-1 py-4 px-6 font-medium transition ${
-                activeTab === 'anak'
-                  ? 'bg-purple-100 text-purple-700 border-b-2 border-purple-600'
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
+              className={`flex-1 py-4 px-6 font-medium transition ${activeTab === 'anak'
+                ? 'bg-purple-100 text-purple-700 border-b-2 border-purple-600'
+                : 'text-gray-600 hover:bg-gray-50'
+                }`}
             >
               Anak
             </button>
@@ -598,6 +598,22 @@ const FamilyDataFormPage = () => {
                         <option value="B">B</option>
                         <option value="AB">AB</option>
                         <option value="O">O</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Jenis Kelamin <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        name="gender"
+                        value={child.gender}
+                        onChange={(e) => handleChildChange(index, e)}
+                        required
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
+                      >
+                        <option value="L">Laki-laki</option>
+                        <option value="P">Perempuan</option>
                       </select>
                     </div>
 
